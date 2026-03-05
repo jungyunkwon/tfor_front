@@ -1,9 +1,25 @@
 const routes = [
   {
     path: '/',
-    component: () => import('layouts/MainLayout.vue'),
+    component: () => import('layouts/DefaultLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') }
+      { path: '', redirect: '/matching' },
+      { path: 'matching', component: () => import('pages/MatchingPage.vue') },
+      { path: 'profile', component: () => import('pages/ProfilePage.vue') },
+    ]
+  },
+  {
+    path: '/auth',
+    component: () => import('layouts/AuthLayout.vue'),
+    children: [
+      { path: 'login', component: () => import('pages/LoginPage.vue') },
+    ]
+  },
+  {
+    path: '/profilevalues',
+    component: () => import('layouts/AuthLayout.vue'),
+    children: [
+      { path: '', component: () => import('pages/ProfileValuesPage.vue') },
     ]
   },
 

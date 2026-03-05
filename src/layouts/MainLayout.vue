@@ -1,7 +1,7 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
-      <q-toolbar>
+    <q-header class="bg-transparent text-white" height-hint="98">
+      <q-toolbar class="q-py-md q-px-lg glass-card q-ma-md" style="margin-bottom: 0">
         <q-btn
           flat
           dense
@@ -9,13 +9,17 @@
           icon="menu"
           aria-label="Menu"
           @click="toggleLeftDrawer"
+          class="hover-scale"
         />
 
-        <q-toolbar-title>
-          Quasar App
+        <q-toolbar-title class="text-weight-bold text-h5 text-gradient">
+          TFor
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <div class="q-gutter-sm">
+          <q-btn flat round dense icon="notifications" class="hover-scale" />
+          <q-btn flat round dense icon="person" class="hover-scale" />
+        </div>
       </q-toolbar>
     </q-header>
 
@@ -23,18 +27,18 @@
       v-model="leftDrawerOpen"
       show-if-above
       bordered
+      class="bg-dark text-white"
     >
-      <q-list>
-        <q-item-label
-          header
-        >
-          Essential Links
+      <q-list class="q-pa-md">
+        <q-item-label header class="text-grey-5 text-uppercase text-weight-bold">
+          Menu
         </q-item-label>
 
         <EssentialLink
           v-for="link in linksList"
           :key="link.title"
           v-bind="link"
+          class="q-my-sm rounded-borders hover-scale"
         />
       </q-list>
     </q-drawer>
@@ -51,46 +55,28 @@ import EssentialLink from 'components/EssentialLink.vue'
 
 const linksList = [
   {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
+    title: 'Home',
+    caption: 'Discover new people',
+    icon: 'home',
+    link: '/'
   },
   {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
-  },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
+    title: 'Matches',
+    caption: 'Your potential partners',
     icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
+    link: '/matches'
+  },
+  {
+    title: 'Messages',
+    caption: 'Chat with your matches',
+    icon: 'chat',
+    link: '/messages'
+  },
+  {
+    title: 'Settings',
+    caption: 'Profile and preferences',
+    icon: 'settings',
+    link: '/settings'
   }
 ]
 
@@ -114,3 +100,13 @@ export default defineComponent({
   }
 })
 </script>
+
+<style lang="sass">
+.q-drawer
+  background: rgba(15, 23, 42, 0.9) !important
+  backdrop-filter: blur(10px)
+
+.q-item--active
+  background: rgba(56, 189, 248, 0.1) !important
+  color: #38bdf8 !important
+</style>
