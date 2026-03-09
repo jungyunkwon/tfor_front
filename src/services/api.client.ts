@@ -1,4 +1,6 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+import { env } from '../utils/env';
+
+export const API_BASE_URL = env.API_BASE_URL;
 
 export async function apiRequest<T>(
     path: string,

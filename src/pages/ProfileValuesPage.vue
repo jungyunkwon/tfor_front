@@ -96,7 +96,7 @@ const form = reactive({
 
 const onComplete = async () => {
   isSubmitting.value = true;
-  const { data, error } = await profileStore.updateProfile(form);
+  const { data } = await profileStore.updateProfile(form);
   if (data) {
     router.push('/profile');
   }
