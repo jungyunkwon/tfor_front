@@ -2,6 +2,7 @@ const routes = [
   {
     path: '/',
     component: () => import('layouts/DefaultLayout.vue'),
+    meta: { requiresAuth: true },
     children: [
       { path: '', redirect: '/matching' },
       { path: 'matching', component: () => import('pages/MatchingPage.vue') },
@@ -11,15 +12,17 @@ const routes = [
   {
     path: '/auth',
     component: () => import('layouts/AuthLayout.vue'),
+    meta: { isGuest: true },
     children: [
       { path: 'login', component: () => import('pages/LoginPage.vue') },
     ]
   },
   {
-    path: '/profilevalues',
+    path: '/signup',
     component: () => import('layouts/AuthLayout.vue'),
+    meta: { requiresAuth: true },
     children: [
-      { path: '', component: () => import('pages/ProfileValuesPage.vue') },
+      { path: '', component: () => import('pages/SignupPage.vue') },
     ]
   },
 

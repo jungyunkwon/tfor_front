@@ -32,3 +32,44 @@ body
   align-items: center
   justify-content: center
   background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.1), transparent), radial-gradient(circle at bottom left, rgba(129, 140, 248, 0.1), transparent)
+
+// --- Auth / Login Page Tokens & Styles ---
+:root
+  --color-auth-bg: #ffffff
+  --color-auth-text: #1e293b
+  --color-auth-text-muted: #64748b
+  --color-auth-border: #e2e8f0
+  --color-auth-primary: #eff6ff
+  --color-auth-primary-text: #2563eb
+  --color-kakao: #fee500
+  --color-kakao-text: #3c1e1e
+
+.auth-page
+  background-color: var(--color-auth-bg) !important
+  color: var(--color-auth-text) !important
+  min-height: 100vh
+
+.auth-input
+  .q-field__control
+    border-radius: 8px
+    &:before
+      border-color: var(--color-auth-border) !important
+      border-width: 1px !important
+    &:hover:before
+      border-color: #cbd5e1 !important
+  .q-field__native
+    color: var(--color-auth-text) !important
+    &::placeholder
+      color: #94a3b8
+
+.auth-btn-primary
+  background-color: var(--color-auth-primary) !important
+  color: var(--color-auth-primary-text) !important
+  border-radius: 8px
+  font-weight: 600
+
+.auth-btn-kakao
+  background-color: var(--color-kakao) !important
+  color: var(--color-kakao-text) !important
+  border-radius: 8px
+  font-weight: 600

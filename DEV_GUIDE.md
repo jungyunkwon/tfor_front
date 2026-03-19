@@ -154,7 +154,6 @@ src/
   2) store 상태 조회(computed)
   3) onMounted에서 초기 로드(action 호출)
   4) 사용자 액션 핸들러는 onXxx로 정의
-  5) API 호출은 store->service 흐름으로만
 
 (예)
 - pages/MatchingPage.vue:
