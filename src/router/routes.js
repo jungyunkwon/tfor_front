@@ -22,7 +22,7 @@ const routes = [
     component: () => import('layouts/AuthLayout.vue'),
     meta: { requiresAuth: true }, // 또는 비회원 가입 플로우인 경우 false
     children: [
-      { path: '', component: () => import('pages/ProfileSetupPage.vue') },
+      { path: '', component: () => import('pages/SignupProfilePage.vue') },
     ]
   },
 

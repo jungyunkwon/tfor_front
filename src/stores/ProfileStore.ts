@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
-import { profileService } from '../services/profile.service';
+import { profileService } from '../services/profileService';
+import { surveyService } from '../services/surveyService';
+import { photoService } from '../services/photoService';
 
 export const useProfileStore = defineStore('profile', {
     state: () => ({
@@ -9,7 +11,7 @@ export const useProfileStore = defineStore('profile', {
     actions: {
         async loadProfile() {
             this.isLoading = true;
-            const { data, error } = await profileService.getMe();
+            const { data, error } = await profileService.getMeProfile();
             if (data) {
                 this.profile = data;
             }
@@ -18,7 +20,7 @@ export const useProfileStore = defineStore('profile', {
         },
         async updateProfile(updateData: any) {
             this.isLoading = true;
-            const { data, error } = await profileService.updateMe(updateData);
+            const { data, error } = await profileService.saveMeProfile(updateData);
             if (data) {
                 this.profile = data;
             }
@@ -27,13 +29,16 @@ export const useProfileStore = defineStore('profile', {
         },
         async updateSurvey(surveyData: any) {
             this.isLoading = true;
-            const { data, error } = await profileService.updateSurvey(surveyData);
+            // surveyData가 객체 형태면 surveyService에 맞게 전달
+            const { data, error } = await surveyService.saveSurveyAnswers(
+                Array.isArray(surveyData) ? surveyData : [surveyData]
+            );
             this.isLoading = false;
             return { data, error };
         },
         async updatePhotos(photoData: any) {
             this.isLoading = true;
-            const { data, error } = await profileService.updatePhotos(photoData);
+            const { data, error } = await photoService.uploadProfilePhoto(photoData);
             this.isLoading = false;
             return { data, error };
         },

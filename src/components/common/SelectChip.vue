@@ -1,0 +1,62 @@
+<template>
+  <div class="select-chip-group row q-gutter-sm">
+    <q-chip
+      v-for="option in options"
+      :key="option.value"
+      :selected="isSelected(option.value)"
+      :label="option.label"
+      clickable
+      outline
+      flat
+      class="custom-chip q-px-md q-py-sm"
+      :class="{ 
+        'active-chip': isSelected(option.value),
+        'inactive-chip': !isSelected(option.value)
+      }"
+      @click="toggleSelection(option.value)"
+    />
+  </div>
+</template>
+
+<script setup>
+const props = defineProps({
+  modelValue: { type: Array, default: () => [] },
+  options: { type: Array, required: true },
+  multiple: { type: Boolean, default: true }
+});
+const emit = defineEmits(['update:modelValue']);
+
+const isSelected = (val) => props.modelValue.includes(val);
+
+const toggleSelection = (val) => {
+  let newList = [...props.modelValue];
+  if (props.multiple) {
+    if (newList.includes(val)) {
+      newList = newList.filter(i => i !== val);
+    } else {
+      newList.push(val);
+    }
+  } else {
+    newList = [val];
+  }
+  emit('update:modelValue', newList);
+};
+</script>
+
+<style lang="sass" scoped>
+.custom-chip
+  border-radius: 20px
+  font-weight: 500
+  transition: all 0.2s ease
+  margin-right: -4px
+  
+.active-chip
+  background: var(--q-primary, #1976D2) !important
+  color: white !important
+  border: 1px solid var(--q-primary, #1976D2) !important
+
+.inactive-chip
+  background: white !important
+  color: var(--color-auth-text, #1e293b) !important
+  border: 1.5px solid var(--color-auth-border, #e2e8f0) !important
+</style>
