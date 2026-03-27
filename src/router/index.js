@@ -1,7 +1,7 @@
 import { defineRouter } from '#q-app/wrappers'
 import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from 'vue-router'
 import routes from './routes'
-import { useAuthStore } from 'src/stores/auth.store'
+import { useAuthStore } from 'src/stores/AuthStore'
 
 /*
  * If not building with SSR mode, you can
@@ -34,32 +34,24 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       await authStore.initAuth();
     }
 
-    const isLoggedIn = !!authStore.access_token || !!localStorage.getItem('supabase_access_token');
-    const hasUserId = !!authStore.userId;
+    const isLoggedIn = authStore.isLoggedIn;
 
+    // 비로그인 사용자가 인증이 필요한 페이지에 접근할 때
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (!isLoggedIn) {
-        next('/auth/login');
-      } else if (!hasUserId && to.path !== '/signup') {
-        next('/signup'); // 회원가입(프로필 작성)이 안된 경우 강제 이동
-      } else if (hasUserId && to.path === '/signup') {
-        next('/'); // 이미 프로필 작성이 완료된 유저가 signup 접근 시 막음
-      } else {
-        next();
+        return next('/auth/login');
       }
-    } else if (to.matched.some(record => record.meta.isGuest)) {
-      if (isLoggedIn) {
-        if (!hasUserId) {
-          next('/signup');
-        } else {
-          next('/');
-        }
-      } else {
-        next();
-      }
-    } else {
-      next();
     }
+
+    // 이미 로그인한 사용자가 로그인 페이지 등(isGuest)에 접근할 때
+    if (to.matched.some(record => record.meta.isGuest)) {
+      if (isLoggedIn) {
+        return next('/');
+      }
+    }
+
+    // 그 외는 그냥 통과 (추후 온보딩 상태 API 연동 시 필요한 가드를 여기에 추가)
+    next();
   });
 
   return Router

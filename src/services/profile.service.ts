@@ -5,10 +5,24 @@ export const profileService = {
         return apiRequest<any>('/profiles/me');
     },
 
-    async updateMe(data: any) {
+    async updateMe(profileData: any) {
         return apiRequest<any>('/profiles/me', {
             method: 'PUT',
-            body: JSON.stringify(data),
+            body: JSON.stringify({ data: profileData }),
+        });
+    },
+
+    async updateSurvey(surveyData: any) {
+        return apiRequest<any>('/profiles/me/survey', {
+            method: 'PUT',
+            body: JSON.stringify({ data: surveyData }),
+        });
+    },
+
+    async updatePhotos(photoData: any) {
+        return apiRequest<any>('/profiles/me/photos', {
+            method: 'POST',
+            body: JSON.stringify({ data: photoData }),
         });
     },
 };

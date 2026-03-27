@@ -78,7 +78,7 @@
 <script setup>
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import { useProfileStore } from '../stores/profile.store';
+import { useProfileStore } from '../stores/ProfileStore';
 
 const step = ref(1);
 const router = useRouter();

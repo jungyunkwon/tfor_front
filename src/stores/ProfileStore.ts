@@ -25,5 +25,17 @@ export const useProfileStore = defineStore('profile', {
             this.isLoading = false;
             return { data, error };
         },
+        async updateSurvey(surveyData: any) {
+            this.isLoading = true;
+            const { data, error } = await profileService.updateSurvey(surveyData);
+            this.isLoading = false;
+            return { data, error };
+        },
+        async updatePhotos(photoData: any) {
+            this.isLoading = true;
+            const { data, error } = await profileService.updatePhotos(photoData);
+            this.isLoading = false;
+            return { data, error };
+        },
     },
 });

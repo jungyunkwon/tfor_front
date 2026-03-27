@@ -85,7 +85,7 @@ src/
   - 세션(user, access token) 상태
   - 다이아(보석) 잔액/변경
   - 현재 매칭 상태/채팅방 id
-- 페이지 컴포넌트는 store의 action만 호출하고, 로직은 store/service로 내린다.
+- 페이지 컴포넌트는 store의 action만 호출하고, 로직은 service로 내린다.
 
 6) services(API) 규칙
 - services는 “HTTP 호출/응답 변환/에러 매핑”만 담당한다.
