@@ -8,7 +8,8 @@
       clickable
       outline
       flat
-      class="custom-chip q-px-md q-py-sm"
+      text-color="white"
+      class="custom-chip q-px-md q-py-md"
       :class="{ 
         'active-chip': isSelected(option.value),
         'inactive-chip': !isSelected(option.value)
@@ -59,12 +60,15 @@ const toggleSelection = (val) => {
   margin-right: -4px
   
 .active-chip
-  background: var(--q-primary, #1976D2) !important
+  background: #87B7EC !important
   color: white !important
-  border: 1px solid var(--q-primary, #1976D2) !important
+  border: 1px solid #87B7EC !important
 
 .inactive-chip
   background: white !important
   color: var(--color-auth-text, #1e293b) !important
   border: 1.5px solid var(--color-auth-border, #e2e8f0) !important
+
+.q-chip__icon--left
+  display: none !important
 </style>

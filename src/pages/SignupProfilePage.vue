@@ -72,17 +72,14 @@ import {
   JOB_OPTIONS,
   EDUCATION_OPTIONS,
   RELIGION_OPTIONS,
-  POLITICS_OPTIONS,
   SMOKING_OPTIONS,
   DRINKING_FREQ_OPTIONS,
-  DIET_OPTIONS,
-  SALARY_BEHAVIOR_OPTIONS,
 } from 'src/enums/code';
 
 const router = useRouter();
 const profileStore = useProfileStore();
 const step = ref(1);
-const maxSteps = 6; 
+const maxSteps = 7; 
 const isStepValid = ref(false);
 const transitionName = ref('slide-left');
 const isSubmitting = ref(false);
@@ -93,6 +90,7 @@ const steps = [
   { key: 'relationship', component: markRaw(Step3Relationship) },
   { key: 'personality', component: markRaw(Step4Personality) },
   { key: 'values', component: markRaw(Step5Values) },
+  { key: 'target', component: markRaw(Step6Target) },
   { key: 'final', component: markRaw(StepFinal) }
 ];
 
@@ -149,6 +147,26 @@ const signupData = reactive({
     marriagePlan: 'DISCUSS', 
     spendingHabit: 'save_first', 
     investment: 'STABLE' 
+  },
+  target: {
+    targetAge: [20, 30],
+    targetHeight: [160, 170],
+    targetRegion: [],
+    targetJob: [],
+    targetEducation: [],
+    targetReligion: [],
+    targetPolitics: [],
+    targetSmoking: [],
+    targetDrinking: [],
+    targetDiet: [],
+    targetSalary: [],
+    targetAsset: [],
+    targetStocks: [],
+    targetIntro: '',
+    importance: 3,
+    lastRelationshipAnalysis: '',
+    idealPartner: '',
+    dealBreakers: ''
   },
   final: {
     photos: [],

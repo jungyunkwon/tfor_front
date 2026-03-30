@@ -19,7 +19,7 @@
           :color="modelValue === option.value ? 'primary' : 'grey-7'" 
         />
         <div class="column">
-          <span class="text-subtitle1 text-weight-bold" :class="modelValue === option.value ? 'text-primary' : 'text-dark'">
+          <span class="text-subtitle2" :class="modelValue === option.value ? 'text-primary' : 'text-dark'">
             {{ option.label }}
           </span>
           <span v-if="option.description" class="text-caption text-grey-7">

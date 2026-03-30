@@ -173,7 +173,7 @@
           outlined 
           dense 
           type="textarea"
-          rows="3"
+          rows="5"
           placeholder="본인의 매력이나 성향을 가볍게 적어주세요!" 
         />
       </div>

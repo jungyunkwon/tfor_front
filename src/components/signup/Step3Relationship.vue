@@ -21,7 +21,7 @@
           outlined
           dense
           placeholder="예: 말로 표현도 자주 하는 편이고, 사소한 걸 챙기면서 애정을 보여줘요. 자주 연락하거나 함께 시간을 보내려는 노력으로 마음을 표현하는 편이에요."
-          rows="3"
+          rows="5"
           class="auth-input"
         />
       </section>
@@ -41,7 +41,7 @@
           outlined
           dense
           placeholder="예: 바로 서운해하기보다 무슨 일이 있는지 먼저 생각해보는 편이에요. 그래도 계속 반복되면 솔직하게 대화로 풀려고 하고, 혼자 추측만 하지는 않으려고 해요."
-          rows="3"
+          rows="5"
           class="auth-input"
         />
       </section>
@@ -61,7 +61,7 @@
           outlined
           dense
           placeholder="예: 시끄럽기보다는 대화할 수 있는 데이트를 좋아해요. 맛집, 카페, 산책처럼 편하게 함께 시간을 보내면서 자연스럽게 가까워지는 만남을 선호해요."
-          rows="3"
+          rows="5"
           class="auth-input"
         />
       </section>
@@ -81,7 +81,7 @@
           outlined
           dense
           placeholder="예: 힘들 때 옆에서 잘 들어주고, 바쁠 때도 소홀하지 않게 챙겨줄 수 있어요. 관계를 가볍게 생각하지 않고, 믿음을 주는 행동은 꾸준히 하려고 해요."
-          rows="3"
+          rows="5"
           class="auth-input"
         />
       </section>

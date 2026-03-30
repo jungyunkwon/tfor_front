@@ -24,7 +24,7 @@
           outlined
           dense
           placeholder="예: 퇴근 후에는 운동을 하거나 집에서 쉬면서 영화를 봐요. 평일에는 대체로 규칙적인 생활을 하는 편이고, 혼자 조용히 보내는 시간도 중요하게 생각해요."
-          rows="4"
+          rows="5"
           class="auth-input"
         />
       </section>
@@ -47,7 +47,7 @@
           outlined
           dense
           placeholder="예: 주말에는 맛집에 가거나 카페에서 시간을 보내고, 가끔은 전시나 산책도 즐겨요. 친구들과는 편하게 대화하며 오래 보는 만남을 좋아해요."
-          rows="4"
+          rows="5"
           class="auth-input"
         />
       </section>

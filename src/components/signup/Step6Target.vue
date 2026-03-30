@@ -25,29 +25,6 @@
       </section>
 
       <section>
-        <label class="section-label q-mb-md">가치관의 일치 여부, 얼마나 중요한가요?</label>
-        <div class="row items-center q-gutter-x-md">
-          <span class="text-caption text-grey-7">전혀 무관</span>
-          <q-slider
-            :model-value="form.importance"
-            @update:model-value="updateField('importance', $event)"
-            :min="1"
-            :max="5"
-            :step="1"
-            snap
-            label
-            markers
-            color="primary"
-            class="col"
-          />
-          <span class="text-caption text-grey-7">매우 중요</span>
-        </div>
-        <div class="text-center q-mt-sm text-subtitle2 text-weight-bold text-primary">
-          {{ importanceLabels[(form.importance || 1) - 1] }}
-        </div>
-      </section>
-
-      <section>
         <label class="section-label q-mb-xs">전 연애에서 배운 점 / 개선하고 싶은 점</label>
         <q-input
           :model-value="form.lastRelationshipAnalysis"
@@ -101,14 +78,6 @@ const conditionOptions = [
   { label: '종교가 같아야 함', value: 'SAME_RELIGION' },
   { label: '야외 활동형', value: 'OUTDOOR' },
   { label: '다정하고 배려심 넘치는', value: 'KIND' }
-];
-
-const importanceLabels = [
-  '가볍게 만날 수 있어요',
-  '조금은 비슷하면 좋겠어요',
-  '보통이에요',
-  '어느 정도 가치관이 통해야 해요',
-  '가치관이 다르면 절대 못 만나요'
 ];
 
 const isValid = computed(() => {
