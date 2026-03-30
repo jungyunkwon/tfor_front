@@ -6,29 +6,31 @@
     </div>
 
     <div class="column q-gutter-y-xl">
-      <!-- 필수 조건 -->
       <section>
         <label class="section-label q-mb-md">상대방에게 바라는 조건 (다중 선택)</label>
-        <SelectChip 
-          v-model="modelValue.targetConditions"
+        <SelectChip
+          :model-value="form.targetConditions"
           :options="conditionOptions"
+          multiple
+          @update:model-value="updateField('targetConditions', $event)"
         />
-        <q-input 
-          v-model="modelValue.targetConditionExtra" 
-          outlined 
-          dense 
+        <q-input
+          :model-value="form.targetConditionExtra"
+          @update:model-value="updateField('targetConditionExtra', $event)"
+          outlined
+          dense
           placeholder="기타 추가하고 싶은 조건이 있다면?"
           class="q-mt-sm"
         />
       </section>
 
-      <!-- 가치관 중요도 -->
       <section>
         <label class="section-label q-mb-md">가치관의 일치 여부, 얼마나 중요한가요?</label>
         <div class="row items-center q-gutter-x-md">
           <span class="text-caption text-grey-7">전혀 무관</span>
           <q-slider
-            v-model="modelValue.importance"
+            :model-value="form.importance"
+            @update:model-value="updateField('importance', $event)"
             :min="1"
             :max="5"
             :step="1"
@@ -41,15 +43,15 @@
           <span class="text-caption text-grey-7">매우 중요</span>
         </div>
         <div class="text-center q-mt-sm text-subtitle2 text-weight-bold text-primary">
-          {{ importanceLabels[modelValue.importance - 1] }}
+          {{ importanceLabels[(form.importance || 1) - 1] }}
         </div>
       </section>
 
-      <!-- 마지막 연애 분석 -->
       <section>
         <label class="section-label q-mb-xs">전 연애에서 배운 점 / 개선하고 싶은 점</label>
         <q-input
-          v-model="modelValue.lastRelationshipAnalysis"
+          :model-value="form.lastRelationshipAnalysis"
+          @update:model-value="updateField('lastRelationshipAnalysis', $event)"
           type="textarea"
           outlined
           placeholder="저번 연애에서 내가 부족했던 부분이나 깨달은 가치관을 솔직하게 적어주세요."
@@ -66,9 +68,28 @@ import { computed, watch } from 'vue';
 import SelectChip from 'src/components/common/SelectChip.vue';
 
 const props = defineProps({
-  modelValue: { type: Object, required: true }
+  modelValue: {
+    type: Object,
+    required: true,
+    default: () => ({
+      targetConditions: [],
+      targetConditionExtra: '',
+      importance: 3,
+      lastRelationshipAnalysis: ''
+    })
+  }
 });
+
 const emit = defineEmits(['update:modelValue', 'validation']);
+
+const form = computed(() => props.modelValue ?? {});
+
+const updateField = (key, value) => {
+  emit('update:modelValue', {
+    ...form.value,
+    [key]: value
+  });
+};
 
 const conditionOptions = [
   { label: '비흡연자', value: 'NON_SMOKER' },
@@ -91,9 +112,10 @@ const importanceLabels = [
 ];
 
 const isValid = computed(() => {
-  const m = props.modelValue;
+  const m = form.value;
   return !!(
-    m.targetConditions && m.targetConditions.length > 0 &&
+    Array.isArray(m.targetConditions) &&
+    m.targetConditions.length > 0 &&
     m.importance &&
     m.lastRelationshipAnalysis
   );

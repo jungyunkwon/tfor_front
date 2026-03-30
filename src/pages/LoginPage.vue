@@ -103,13 +103,18 @@ const canSubmit = computed(() => {
 
 const moveAfterLogin = async (user = null, session = null) => {
   if (user && session) {
-    authStore.setUser(user, session);
+    await authStore.setUser(user, session);
   } else {
     await authStore.initAuth();
   }
 
   if (authStore.isLoggedIn) {
-    router.replace('/signup');
+    // 온보딩 여부에 따라 페이지 이동
+    if (authStore.isOnboardingCompleted) {
+      router.replace('/matching');
+    } else {
+      router.replace('/signup');
+    }
   } else {
     router.replace('/login');
   }
@@ -223,9 +228,11 @@ onMounted(async () => {
     route.hash;
 
   if (hasOAuthParams) {
+    console.log('oauthparam 체크: ', hasOAuthParams);
     const { data } = await supabase.auth.getSession();
 
     if (data?.session) {
+      console.log('session completed: ', data);
       await moveAfterLogin(data.session.user, data.session);
     }
   }

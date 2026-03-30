@@ -67,10 +67,22 @@ import Step5Values from 'src/components/signup/Step5Values.vue';
 import Step6Target from 'src/components/signup/Step6Target.vue';
 import StepFinal from 'src/components/signup/StepFinal.vue';
 
+import {
+  BODY_SHAPE_OPTIONS,
+  JOB_OPTIONS,
+  EDUCATION_OPTIONS,
+  RELIGION_OPTIONS,
+  POLITICS_OPTIONS,
+  SMOKING_OPTIONS,
+  DRINKING_FREQ_OPTIONS,
+  DIET_OPTIONS,
+  SALARY_BEHAVIOR_OPTIONS,
+} from 'src/enums/code';
+
 const router = useRouter();
 const profileStore = useProfileStore();
 const step = ref(1);
-const maxSteps = 7; // 6 Steps + Final Summary
+const maxSteps = 6; 
 const isStepValid = ref(false);
 const transitionName = ref('slide-left');
 const isSubmitting = ref(false);
@@ -81,40 +93,81 @@ const steps = [
   { key: 'relationship', component: markRaw(Step3Relationship) },
   { key: 'personality', component: markRaw(Step4Personality) },
   { key: 'values', component: markRaw(Step5Values) },
-  { key: 'target', component: markRaw(Step6Target) },
   { key: 'final', component: markRaw(StepFinal) }
 ];
 
 const signupData = reactive({
   basic: {
     nickname: '',
-    gender_cd: null,
-    birthYear: null,
-    height: null,
-    region: null,
-    bodyShape: null,
-    job: null,
-    education: null,
-    religion: null,
-    politics: null,
-    smoking: null,
-    drinking: null,
-    drinkingType: null,
-    diet: null,
-    jobType: null,
-    assetInfo: null,
+    gender_cd: 'MALE',
+    birthYear: 1995,
+    height: 175,
+    region: 'SEOUL',
+    subregion: 'GANGNAM',
+    bodyShape: BODY_SHAPE_OPTIONS[0].code,
+    job: JOB_OPTIONS[0].code,
+    job_etc: '',
+    education: EDUCATION_OPTIONS[2].code,
+    education_etc: '',
+    religion: RELIGION_OPTIONS[0].code,
+    religion_etc: '',
+    politics: 'NEUTRAL',
+    smoking: SMOKING_OPTIONS[1].code,
+    drinking: DRINKING_FREQ_OPTIONS[3].code,
+    drinkingType: [],
+    diet: 'korean',
+    jobType: 'employee',
+    salary_amount: 5000,
+    business_type: '',
+    revenue_amount: 0,
+    assetInfo: [],
+    stocks: [],
     intro_text: ''
   },
-  lifestyle: { routines: [], relaxation: '' },
-  relationship: { idealDate: [], expressionWay: null, contactFrequency: null, happiness: '', dateExpense: null },
-  personality: { stressRelief: [], conflictResolution: null, avoidBehavior: '' },
-  values: { marriagePlan: null, currentJobDetail: '', careerGoal: '', futurePlan: '', spendingHabit: null, investment: null, familyAtmosphere: null, parentConflict: null },
-  target: { targetConditions: [], targetConditionExtra: '', importance: 3, lastRelationshipAnalysis: '' },
-  final: {}
+  lifestyle: { 
+    weekdayActivity: '', 
+    weekendActivity: '' 
+  },
+  relationship: { 
+    expressionWay: '', 
+    contactIssue: '', 
+    idealDateStyle: '', 
+    benefitToPartner: '', 
+    dateExpense: 'ALTERNATE' 
+  },
+  personality: { 
+    stressRelief: '', 
+    conflictResolution: '', 
+    avoidBehavior: '' 
+  },
+  values: { 
+    currentJob: '', 
+    careerGoal: '', 
+    futurePlan: '', 
+    familyAtmosphere: '', 
+    familyConflict: '', 
+    marriagePlan: 'DISCUSS', 
+    spendingHabit: 'save_first', 
+    investment: 'STABLE' 
+  },
+  final: {
+    photos: [],
+    agreements: {
+      privacy: false,
+      service: false
+    }
+  }
 });
 
-const stepKey = computed(() => steps[step.value - 1].key);
-const currentStepComponent = computed(() => steps[step.value - 1].component);
+const stepKey = computed(() => {
+  if (step.value < 1 || step.value > steps.length) return 'basic';
+  return steps[step.value - 1].key;
+});
+
+const currentStepComponent = computed(() => {
+  if (step.value < 1 || step.value > steps.length) return markRaw(Step1Basic);
+  return steps[step.value - 1].component;
+});
 
 const onStepValidation = (isValid) => {
   isStepValid.value = isValid;

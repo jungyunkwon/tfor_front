@@ -35,22 +35,34 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     }
 
     const isLoggedIn = authStore.isLoggedIn;
+    const isOnboardingCompleted = authStore.isOnboardingCompleted;
 
-    // 비로그인 사용자가 인증이 필요한 페이지에 접근할 때
+    // 1. 비로그인 사용자가 인증이 필요한 페이지에 접근할 때
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (!isLoggedIn) {
         return next('/auth/login');
       }
-    }
 
-    // 이미 로그인한 사용자가 로그인 페이지 등(isGuest)에 접근할 때
-    if (to.matched.some(record => record.meta.isGuest)) {
-      if (isLoggedIn) {
-        return next('/');
+      // 로그인되었으나 온보딩이 안 된 경우 (온보딩 페이지(/signup)가 아닌 경우에만 리다이렉트)
+      if (!isOnboardingCompleted && to.path !== '/signup') {
+        return next('/signup');
+      }
+
+      // 온보딩이 완료되었으나 온보딩 페이지(/signup)에 머물려 할 때
+      if (isOnboardingCompleted && to.path === '/signup') {
+        return next('/matching');
       }
     }
 
-    // 그 외는 그냥 통과 (추후 온보딩 상태 API 연동 시 필요한 가드를 여기에 추가)
+    // 2. 이미 로그인한 사용자가 로그인 페이지 등(isGuest)에 접근할 때
+    if (to.matched.some(record => record.meta.isGuest)) {
+      if (isLoggedIn) {
+        // 온보딩 여부에 따라 메인 또는 온보딩 페이지로
+        return isOnboardingCompleted ? next('/matching') : next('/signup');
+      }
+    }
+
+    // 그 외는 그냥 통과
     next();
   });
 

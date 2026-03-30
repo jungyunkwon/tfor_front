@@ -1,55 +1,98 @@
 <template>
-  <div class="step-relationship q-pa-md">
-    <div class="header-section q-mb-xl">
-      <h1 class="text-h5 text-weight-bold q-mb-sm">연애 스타일을 알려주세요</h1>
-      <p class="text-grey-7">서로 잘 맞는 가치관을 찾아드립니다</p>
+  <div class="step-relationship q-pa-md anim-fade">
+    <div class="header-section q-mb-lg">
+      <h1 class="text-h5 text-weight-bold q-mb-sm">어떤 연애를</h1>
+      <h1 class="text-h5 text-weight-bold">꿈꾸시나요?</h1>
     </div>
 
-    <div class="column q-gutter-y-xl">
+    <div class="q-col-gutter-y-lg">
       <!-- 애정표현 -->
       <section>
-        <label class="section-label q-mb-md">선호하는 애정표현 방식</label>
-        <RadioCard 
-          v-model="modelValue.expressionWay"
-          :options="expressionOptions"
-        />
-      </section>
-
-      <!-- 연락 안 될 때 -->
-      <section>
-        <label class="section-label q-mb-md">상대방과 연락이 안 될 때</label>
-        <RadioCard 
-          v-model="modelValue.contactFrequency"
-          :options="contactOptions"
-        />
-      </section>
-
-      <!-- 이상적 데이트 -->
-      <section>
-        <label class="section-label q-mb-md">가장 좋아하는 데이트 (다중)</label>
-        <SelectChip 
-          v-model="modelValue.idealDate"
-          :options="dateOptions"
-        />
-      </section>
-
-      <!-- 매일 행복 -->
-      <section>
-        <label class="section-label q-mb-md">언제 가장 행복하신가요?</label>
+        <div class="row justify-between items-center q-mb-sm">
+          <label class="section-label">연애할 때 애정표현은 어떻게 하는 편이세요?</label>
+          <span class="text-caption" :class="expressionCount < 30 ? 'text-grey-6' : 'text-primary'">
+            {{ expressionCount }} / 30자 이상
+          </span>
+        </div>
         <q-input
-          v-model="modelValue.happiness"
+          :model-value="form.expressionWay"
+          @update:model-value="updateField('expressionWay', $event)"
+          type="textarea"
           outlined
           dense
-          placeholder="나만의 소소한 행복을 적어주세요 (예: 주말 늦잠)"
+          placeholder="예: 말로 표현도 자주 하는 편이고, 사소한 걸 챙기면서 애정을 보여줘요. 자주 연락하거나 함께 시간을 보내려는 노력으로 마음을 표현하는 편이에요."
+          rows="3"
+          class="auth-input"
         />
       </section>
 
-      <!-- 데이트 비용 -->
+      <!-- 연락 문제 -->
       <section>
-        <label class="section-label q-mb-md">데이트 비용 부담에 대해서</label>
-        <RadioCard 
-          v-model="modelValue.dateExpense"
+        <div class="row justify-between items-center q-mb-sm">
+          <label class="section-label">상대방과 연락이 평소와 다르게 잘 안 된다면 어떻게 행동하시나요?</label>
+          <span class="text-caption" :class="contactCount < 30 ? 'text-grey-6' : 'text-primary'">
+            {{ contactCount }} / 30자 이상
+          </span>
+        </div>
+        <q-input
+          :model-value="form.contactIssue"
+          @update:model-value="updateField('contactIssue', $event)"
+          type="textarea"
+          outlined
+          dense
+          placeholder="예: 바로 서운해하기보다 무슨 일이 있는지 먼저 생각해보는 편이에요. 그래도 계속 반복되면 솔직하게 대화로 풀려고 하고, 혼자 추측만 하지는 않으려고 해요."
+          rows="3"
+          class="auth-input"
+        />
+      </section>
+
+      <!-- 데이트 스타일 -->
+      <section>
+        <div class="row justify-between items-center q-mb-sm">
+          <label class="section-label">데이트를 한다면 주로 어떤 데이트를 선호하세요?</label>
+          <span class="text-caption" :class="idealCount < 30 ? 'text-grey-6' : 'text-primary'">
+            {{ idealCount }} / 30자 이상
+          </span>
+        </div>
+        <q-input
+          :model-value="form.idealDateStyle"
+          @update:model-value="updateField('idealDateStyle', $event)"
+          type="textarea"
+          outlined
+          dense
+          placeholder="예: 시끄럽기보다는 대화할 수 있는 데이트를 좋아해요. 맛집, 카페, 산책처럼 편하게 함께 시간을 보내면서 자연스럽게 가까워지는 만남을 선호해요."
+          rows="3"
+          class="auth-input"
+        />
+      </section>
+
+      <!-- 해줄 수 있는 것 -->
+      <section>
+        <div class="row justify-between items-center q-mb-sm">
+          <label class="section-label">연인에게 이것만은 해줄 수 있다는 게 있을까요?</label>
+          <span class="text-caption" :class="benefitCount < 30 ? 'text-grey-6' : 'text-primary'">
+            {{ benefitCount }} / 30자 이상
+          </span>
+        </div>
+        <q-input
+          :model-value="form.benefitToPartner"
+          @update:model-value="updateField('benefitToPartner', $event)"
+          type="textarea"
+          outlined
+          dense
+          placeholder="예: 힘들 때 옆에서 잘 들어주고, 바쁠 때도 소홀하지 않게 챙겨줄 수 있어요. 관계를 가볍게 생각하지 않고, 믿음을 주는 행동은 꾸준히 하려고 해요."
+          rows="3"
+          class="auth-input"
+        />
+      </section>
+
+      <!-- 데이트 비용 (선택형) -->
+      <section>
+        <label class="section-label q-mb-sm">데이트 비용 부담은?</label>
+        <RadioCard
+          :model-value="form.dateExpense"
           :options="expenseOptions"
+          @update:model-value="updateField('dateExpense', $event)"
         />
       </section>
     </div>
@@ -59,50 +102,46 @@
 <script setup>
 import { computed, watch } from 'vue';
 import RadioCard from 'src/components/common/RadioCard.vue';
-import SelectChip from 'src/components/common/SelectChip.vue';
+import { DATE_EXPENSE_OPTIONS } from 'src/enums/code';
 
 const props = defineProps({
-  modelValue: { type: Object, required: true }
+  modelValue: {
+    type: Object,
+    required: true,
+    default: () => ({
+      expressionWay: '',
+      contactIssue: '',
+      idealDateStyle: '',
+      benefitToPartner: '',
+      dateExpense: null
+    })
+  }
 });
+
 const emit = defineEmits(['update:modelValue', 'validation']);
 
-const expressionOptions = [
-  { label: '말로 표현하는 게 중요해', value: 'VERBAL', description: '사랑한다는 말을 자주 하는 편' },
-  { label: '행동으로 보여줄게', value: 'ACTION', description: '챙겨주거나 선물을 주는 실질적인 태도' },
-  { label: '스킨십이 가장 좋아', value: 'PHYSICAL', description: '손잡기, 안아주기 등 신체 접촉' }
-];
+const form = computed(() => props.modelValue ?? {});
 
-const contactOptions = [
-  { label: '바쁘면 나중에 해도 돼', value: 'RELAXED', description: '서로의 시간을 존중하는 편' },
-  { label: '그래도 생존 신고는 해줘', value: 'MINIMUM', description: '최소한의 소식은 궁금해' },
-  { label: '연락은 사랑의 척도야', value: 'FREQUENT', description: '자주 연락하는 것이 안심돼' }
-];
+const updateField = (key, value) => {
+  emit('update:modelValue', {
+    ...form.value,
+    [key]: value
+  });
+};
 
-const dateOptions = [
-  { label: '맛집 투어', value: 'FOOD' },
-  { label: '영화/공연', value: 'CULTURE' },
-  { label: '산책/등산', value: 'OUTDOOR' },
-  { label: '카페 수다', value: 'TALK' },
-  { label: '홈데이트', value: 'HOME' },
-  { label: '여행/드라이브', value: 'TRAVEL' }
-];
+const expenseOptions = DATE_EXPENSE_OPTIONS.map(o => ({ label: o.name, value: o.code }));
 
-const expenseOptions = [
-  { label: '여유 있는 사람이 더 내기', value: 'FLEXIBLE' },
-  { label: '정확하게 더치페이', value: 'DUTCH' },
-  { label: '번갈아 가며 사기', value: 'ALTERNATE' },
-  { label: '남자가/여자가 더 내기', value: 'TRADITIONAL' }
-];
+const expressionCount = computed(() => (form.value.expressionWay || '').trim().length);
+const contactCount = computed(() => (form.value.contactIssue || '').trim().length);
+const idealCount = computed(() => (form.value.idealDateStyle || '').trim().length);
+const benefitCount = computed(() => (form.value.benefitToPartner || '').trim().length);
 
 const isValid = computed(() => {
-  const m = props.modelValue;
-  return !!(
-    m.expressionWay && 
-    m.contactFrequency && 
-    m.idealDate && m.idealDate.length > 0 &&
-    m.happiness &&
-    m.dateExpense
-  );
+  return expressionCount.value >= 30 && 
+         contactCount.value >= 30 && 
+         idealCount.value >= 30 && 
+         benefitCount.value >= 30 &&
+         !!form.value.dateExpense;
 });
 
 watch(isValid, (newVal) => {
@@ -113,7 +152,8 @@ watch(isValid, (newVal) => {
 <style lang="sass" scoped>
 .section-label
   display: block
-  font-weight: 700
+  font-weight: 600
   color: var(--color-auth-text, #1e293b)
   font-size: 0.95rem
+  line-height: 1.4
 </style>

@@ -20,26 +20,34 @@
 
 <script setup>
 const props = defineProps({
-  modelValue: { type: Array, default: () => [] },
+  modelValue: { type: [Array, String, Number, null], default: null },
   options: { type: Array, required: true },
-  multiple: { type: Boolean, default: true }
+  multiple: { type: Boolean, default: true },
+  max: { type: Number, default: null }
 });
 const emit = defineEmits(['update:modelValue']);
 
-const isSelected = (val) => props.modelValue.includes(val);
+const isSelected = (val) => {
+  if (props.multiple) {
+    return Array.isArray(props.modelValue) && props.modelValue.includes(val);
+  }
+  return props.modelValue === val;
+};
 
 const toggleSelection = (val) => {
-  let newList = [...props.modelValue];
   if (props.multiple) {
-    if (newList.includes(val)) {
-      newList = newList.filter(i => i !== val);
+    const list = Array.isArray(props.modelValue) ? [...props.modelValue] : [];
+    if (list.includes(val)) {
+      const newList = list.filter(i => i !== val);
+      emit('update:modelValue', newList);
     } else {
-      newList.push(val);
+      if (props.max && list.length >= props.max) return;
+      list.push(val);
+      emit('update:modelValue', list);
     }
   } else {
-    newList = [val];
+    emit('update:modelValue', val);
   }
-  emit('update:modelValue', newList);
 };
 </script>
 

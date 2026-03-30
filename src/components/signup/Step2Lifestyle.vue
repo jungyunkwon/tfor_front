@@ -1,41 +1,55 @@
 <template>
-  <div class="step-lifestyle q-pa-md">
-    <div class="header-section q-mb-xl">
-      <h1 class="text-h5 text-weight-bold q-mb-sm">라이프스타일을 알려주세요</h1>
-      <p class="text-grey-7">일상 패턴을 기반으로 추천합니다</p>
+  <div class="step-lifestyle q-pa-md anim-fade">
+    <div class="header-section q-mb-lg">
+      <h1 class="text-h5 text-weight-bold q-mb-sm">어떤 일상을</h1>
+      <h1 class="text-h5 text-weight-bold">보내고 계신가요?</h1>
     </div>
 
     <div class="q-col-gutter-y-lg">
-      <!-- 평일 루틴 -->
+      <!-- 평일 활동 -->
       <section>
-        <label class="section-label q-mb-md">평일 루틴 (다중 선택)</label>
-        <SelectChip 
-          v-model="modelValue.routines"
-          :options="routineOptions"
-          multiple
-        />
-      </section>
-
-      <!-- 휴식 방법 -->
-      <section>
-        <div class="row justify-between items-center q-mb-md">
-          <label class="section-label">휴식 방법</label>
-          <span 
+        <div class="row justify-between items-center q-mb-sm">
+          <label class="section-label">평일에는 주로 어떻게 시간을 보내시나요?</label>
+          <span
             class="text-caption"
-            :class="charCount < 50 ? 'text-negative' : 'text-positive'"
+            :class="weekdayCount < 40 ? 'text-grey-6' : 'text-primary'"
           >
-            {{ charCount }} / 50자 이상
+            {{ weekdayCount }} / 40자 이상
           </span>
         </div>
         <q-input
-          v-model="modelValue.relaxation"
+          :model-value="form.weekdayActivity"
+          @update:model-value="updateField('weekdayActivity', $event)"
           type="textarea"
           outlined
-          placeholder="주말이나 여가시간에 주로 어떻게 휴식을 취하시는지 알려주세요. (평소 취미나 선호하는 휴식 환경 등)"
-          rows="6"
+          dense
+          placeholder="예: 퇴근 후에는 운동을 하거나 집에서 쉬면서 영화를 봐요. 평일에는 대체로 규칙적인 생활을 하는 편이고, 혼자 조용히 보내는 시간도 중요하게 생각해요."
+          rows="4"
           class="auth-input"
         />
-        <p class="text-caption text-grey-6 q-mt-xs">자세한 설명은 상대방에게 신뢰감을 줍니다.</p>
+      </section>
+
+      <!-- 주말/친구 활동 -->
+      <section>
+        <div class="row justify-between items-center q-mb-sm">
+          <label class="section-label">주말이나 친구들을 만날 때는 주로 어떻게 시간을 보내시나요?</label>
+          <span
+            class="text-caption"
+            :class="weekendCount < 40 ? 'text-grey-6' : 'text-primary'"
+          >
+            {{ weekendCount }} / 40자 이상
+          </span>
+        </div>
+        <q-input
+          :model-value="form.weekendActivity"
+          @update:model-value="updateField('weekendActivity', $event)"
+          type="textarea"
+          outlined
+          dense
+          placeholder="예: 주말에는 맛집에 가거나 카페에서 시간을 보내고, 가끔은 전시나 산책도 즐겨요. 친구들과는 편하게 대화하며 오래 보는 만남을 좋아해요."
+          rows="4"
+          class="auth-input"
+        />
       </section>
     </div>
   </div>
@@ -43,31 +57,34 @@
 
 <script setup>
 import { computed, watch } from 'vue';
-import SelectChip from 'src/components/common/SelectChip.vue';
 
 const props = defineProps({
-  modelValue: { type: Object, required: true }
+  modelValue: {
+    type: Object,
+    required: true,
+    default: () => ({
+      weekdayActivity: '',
+      weekendActivity: ''
+    })
+  }
 });
+
 const emit = defineEmits(['update:modelValue', 'validation']);
 
-const routineOptions = [
-  { label: '아침형 인간', value: 'EARLY_BIRD' },
-  { label: '야행성', value: 'NIGHT_OWL' },
-  { label: '규칙적인 식습관', value: 'REGULAR_MEAL' },
-  { label: '운동 매일 함', value: 'DAILY_EXERCISE' },
-  { label: '독서 즐김', value: 'READING' },
-  { label: '커피 수혈 필수', value: 'COFFEE' },
-  { label: '영양제 잘 챙겨 먹음', value: 'VITAMIN' },
-  { label: '반려동물과 시간 보냄', value: 'PET' },
-  { label: '넷플릭스 덕후', value: 'NETFLIX' },
-  { label: '집바라기', value: 'HOMEBODY' }
-];
+const form = computed(() => props.modelValue ?? {});
 
-const charCount = computed(() => (props.modelValue.relaxation || '').length);
+const updateField = (key, value) => {
+  emit('update:modelValue', {
+    ...form.value,
+    [key]: value
+  });
+};
+
+const weekdayCount = computed(() => (form.value.weekdayActivity || '').trim().length);
+const weekendCount = computed(() => (form.value.weekendActivity || '').trim().length);
 
 const isValid = computed(() => {
-  const m = props.modelValue;
-  return m.routines && m.routines.length > 0 && charCount.value >= 50;
+  return weekdayCount.value >= 40 && weekendCount.value >= 40;
 });
 
 watch(isValid, (newVal) => {
@@ -78,7 +95,8 @@ watch(isValid, (newVal) => {
 <style lang="sass" scoped>
 .section-label
   display: block
-  font-weight: 700
+  font-weight: 600
   color: var(--color-auth-text, #1e293b)
   font-size: 0.95rem
+  line-height: 1.4
 </style>
