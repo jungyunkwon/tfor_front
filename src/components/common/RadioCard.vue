@@ -3,7 +3,7 @@
     <div
       v-for="option in options"
       :key="option.value"
-      class="radio-card q-pa-md cursor-pointer row items-center justify-between"
+      class="radio-card q-px-md q-py-sm cursor-pointer row items-center justify-between"
       :class="{ 
         'radio-card-active': modelValue === option.value,
         'radio-card-inactive': modelValue !== option.value 

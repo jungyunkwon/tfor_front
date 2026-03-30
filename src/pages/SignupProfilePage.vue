@@ -37,13 +37,13 @@
     </main>
 
     <!-- 하단 고정 버튼 -->
-    <footer class="setup-footer fixed-bottom bg-white border-top q-pa-md">
+    <footer class="setup-footer fixed-bottom bg-white border-top q-pa-sm">
       <div class="max-width-container">
         <q-btn
           :label="step === maxSteps ? '완료' : '다음'"
           :disable="!isStepValid"
           unelevated
-          class="full-width q-py-lg auth-btn-primary hover-scale"
+          class="full-width q-py-md q-px-md auth-btn-primary hover-scale"
           @click="nextStep"
         />
       </div>
@@ -291,7 +291,7 @@ const onComplete = async () => {
 
 .setup-footer
   z-index: 100
-  height: 100px
+  height: 80px
 
 .max-width-container
   max-width: 600px
