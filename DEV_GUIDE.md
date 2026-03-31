@@ -33,12 +33,12 @@ src/
 - 폴더: kebab-case (예: user-profile, content-detail)  ※ 단, 현재 명시 구조는 유지
 - Vue 컴포넌트 파일: PascalCase.vue
   예) BaseButton.vue, MatchingPage.vue
-- Pinia 스토어: <domain>.store.ts 또는 use<Domain>Store.ts 중 1개로 통일
-  표준: stores/<domain>.store.ts (예: auth.store.ts, profile.store.ts)
-- 서비스(API 래퍼): <domain>.service.ts
-  예) profile.service.ts, likes.service.ts
-- enum: <Domain>.enum.ts 또는 <domain>.enum.ts 중 1개로 통일
-  표준: enums/<domain>.enum.ts (예: like.enum.ts)
+- Pinia 스토어: <domain>Store.ts 또는 use<Domain>Store.ts 중 1개로 통일
+  표준: stores/<domain>Store.ts (예: authStore.ts, profileStore.ts)
+- 서비스(API 래퍼): <domain>Service.ts
+  예) profileService.ts, likesService.ts
+- enum: <Domain>Enum.ts 또는 <domain>Enum.ts 중 1개로 통일
+  표준: enums/<domain>Enum.ts (예: likeEnum.ts)
 
 2-2) 코드
 - 변수/함수: camelCase
@@ -79,13 +79,10 @@ src/
 - 관리자 페이지: role guard로 차단
 
 5) 상태관리(Pinia) 규칙
-- stores는 “도메인 단위”로 쪼갠다.
-- UI 토스트/모달 같은 전역 UI 상태도 store로 관리 가능(예: ui.store.ts).
 - store에서만:
   - 세션(user, access token) 상태
   - 다이아(보석) 잔액/변경
   - 현재 매칭 상태/채팅방 id
-- 페이지 컴포넌트는 store의 action만 호출하고, 로직은 service로 내린다.
 
 6) services(API) 규칙
 - services는 “HTTP 호출/응답 변환/에러 매핑”만 담당한다.

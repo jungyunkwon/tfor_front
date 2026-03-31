@@ -6,7 +6,6 @@ import { supabase } from '../utils/supabase';
 export const profileService = {
     /**
      * 내 프로필 정보 조회 (getMeProfile)
-     * TB_USER_PROFILE (2-3) 테이블 조회
      */
     async getMeProfile() {
         const { data: { user } } = await supabase.auth.getUser();
@@ -16,42 +15,43 @@ export const profileService = {
             .from('tb_user_profile')
             .select('*')
             .eq('user_id', user.id)
-            .single();
+            .maybeSingle();
 
-        // 변환: snake_case -> camelCase (API_GUIDE 응답 규격 준수)
+        if (error) return { data: null, error };
+        
         if (data) {
-            const mapped = {
-                userProfileId: data.user_profile_id,
-                nickname: data.nickname,
-                genderCd: data.gender_cd,
-                birthYear: data.birth_year,
-                heightCm: data.height_cm,
-                jobName: data.job_name,
-                educationLevelCd: data.education_level_cd,
-                regionCd: data.region_cd,
-                introText: data.intro_text,
-                smokingYn: data.smoking_yn,
-                drinkingCd: data.drinking_cd,
-                religionCd: data.religion_cd,
-                maritalStatusCd: data.marital_status_cd,
-                childrenYn: data.children_yn,
-                profileOpenYn: data.profile_open_yn
+            return {
+                data: {
+                    userProfileId: data.user_profile_id,
+                    nickname: data.nickname,
+                    genderCd: data.gender_cd,
+                    birthYear: data.birth_year,
+                    heightCm: data.height_cm,
+                    jobName: data.job_name,
+                    educationLevelCd: data.education_level_cd,
+                    regionCd: data.region_cd,
+                    introText: data.intro_text,
+                    smokingYn: data.smoking_yn,
+                    drinkingCd: data.drinking_cd,
+                    religionCd: data.religion_cd,
+                    maritalStatusCd: data.marital_status_cd,
+                    childrenYn: data.children_yn,
+                    profileOpenYn: data.profile_open_yn
+                },
+                error: null
             };
-            return { data: mapped, error: null };
         }
 
-        return { data: null, error };
+        return { data: null, error: null };
     },
 
     /**
      * 프로필 저장/수정 (saveMeProfile)
-     * TB_USER_PROFILE (2-3) 테이블 UPSERT
      */
     async saveMeProfile(profileData: any) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
 
-        // 변환: camelCase -> snake_case (TABLE_INFORMATION 규격 준수)
         const payload = {
             user_id: user.id,
             nickname: profileData.nickname,
@@ -78,7 +78,15 @@ export const profileService = {
             .select()
             .single();
 
-        return { data, error };
+        if (error) return { data: null, error };
+
+        return { 
+            data: {
+                success: true,
+                profile: data
+            }, 
+            error: null 
+        };
     },
 
     /**
@@ -88,18 +96,19 @@ export const profileService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
 
-        // tb_user_profile + tb_profile_photo + tb_user_survey_answer 조회 (실제로는 정교한 쿼리 필요)
-        const { data: profile } = await supabase.from('tb_user_profile').select('*').eq('user_id', user.id).single();
-        const { data: photo } = await supabase.from('tb_profile_photo').select('*').eq('user_id', user.id).eq('main_photo_yn', 'Y').maybeSingle();
-        const { data: survey } = await supabase.from('tb_user_survey_answer').select('*').eq('user_id', user.id);
+        const [profileRes, photoRes, surveyRes] = await Promise.all([
+            supabase.from('tb_user_profile').select('*').eq('user_id', user.id).maybeSingle(),
+            supabase.from('tb_profile_photo').select('*').eq('user_id', user.id).eq('main_photo_yn', 'Y').maybeSingle(),
+            supabase.from('tb_user_survey_answer').select('*').eq('user_id', user.id)
+        ]);
 
         return {
             data: {
-                profileSummary: profile,
-                mainPhoto: photo,
-                surveySummary: survey
+                profileSummary: profileRes.data,
+                mainPhoto: photoRes.data,
+                surveySummary: surveyRes.data
             },
-            error: null
+            error: profileRes.error || photoRes.error || surveyRes.error
         };
     },
 
@@ -114,7 +123,25 @@ export const profileService = {
             .eq('profile_open_yn', 'Y')
             .single();
 
-        // 추가 사진/설문 결합 로직 필요
-        return { data, error };
+        if (error) return { data: null, error };
+
+        // 추가 사진/설문 결합 logic
+        const [photoRes, surveyRes] = await Promise.all([
+            supabase.from('tb_profile_photo').select('*').eq('user_id', targetUserId).eq('visible_yn', 'Y'),
+            supabase.from('tb_user_survey_answer').select('*').eq('user_id', targetUserId)
+        ]);
+
+        return { 
+            data: {
+                targetUserId: data.user_id,
+                nickname: data.nickname,
+                age: new Date().getFullYear() - (data.birth_year || new Date().getFullYear()),
+                regionCd: data.region_cd,
+                introText: data.intro_text,
+                photoList: photoRes.data,
+                surveySummary: surveyRes.data
+            }, 
+            error: null 
+        };
     }
 };

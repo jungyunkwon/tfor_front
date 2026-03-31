@@ -6,10 +6,9 @@ import { supabase } from '../utils/supabase';
 export const surveyService = {
   /**
    * 온보딩/설문용 질문 리스트 조회 (getSurveyQuestions)
-   * TB_SURVEY_QUESTION (2-5) 테이블 조회
    */
-  async getSurveyQuestions(groupCode: string) {
-    const { data, error } = await supabase
+  async getSurveyQuestions(groupCode: string, includeAdminOnly: boolean = false) {
+    let query = supabase
       .from('tb_survey_question')
       .select(`
         survey_question_id,
@@ -26,22 +25,42 @@ export const surveyService = {
         )
       `)
       .eq('question_group_cd', groupCode)
-      .eq('active_yn', 'Y')
+      .eq('active_yn', 'Y');
+    
+    if (!includeAdminOnly) {
+      query = query.eq('admin_only_yn', 'N');
+    }
+
+    const { data, error } = await query
       .order('display_order', { ascending: true })
       .order('display_order', { foreignTable: 'tb_survey_option', ascending: true });
 
-    return { data, error };
+    if (error) return { data: null, error };
+
+    return { 
+      data: {
+        questions: data?.map(q => ({
+          surveyQuestionId: q.survey_question_id,
+          questionText: q.question_text,
+          questionTypeCd: q.question_type_cd,
+          options: q.tb_survey_option?.map((o: any) => ({
+            surveyOptionId: o.survey_option_id,
+            optionText: o.option_text,
+            optionValue: o.option_value
+          }))
+        }))
+      }, 
+      error: null 
+    };
   },
 
   /**
    * 설문 응답 저장 (saveSurveyAnswers)
-   * TB_USER_SURVEY_ANSWER (2-7) 테이블 UPSERT
    */
   async saveSurveyAnswers(answers: any[]) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
 
-    // API_GUIDE의 리스트 형태 응답 구조 준수
     const payload = answers.map(ans => ({
       user_id: user.id,
       survey_question_id: ans.surveyQuestionId,
@@ -55,16 +74,24 @@ export const surveyService = {
 
     const { data, error } = await supabase
       .from('tb_user_survey_answer')
-      .upsert(payload, { onConflict: 'user_id,survey_question_id' }) // 복합키 conflict 처리
+      .upsert(payload, { onConflict: 'user_id,survey_question_id' })
       .select();
 
-    return { data, error };
+    if (error) return { data: null, error };
+
+    return { 
+      data: {
+        success: true,
+        submittedCount: data?.length || 0
+      }, 
+      error: null 
+    };
   },
 
   /**
-   * 사용자 설문 응답 결과 조회 (getUserSurveyResult)
+   * 내 설문 응답 조회 (getMySurveyAnswers)
    */
-  async getUserSurveyResult() {
+  async getMySurveyAnswers() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
 
@@ -73,6 +100,13 @@ export const surveyService = {
       .select('survey_question_id, survey_option_id, answer_text, answer_json, submitted_dt')
       .eq('user_id', user.id);
 
-    return { data, error };
+    if (error) return { data: null, error };
+
+    return { 
+      data: {
+        answers: data
+      }, 
+      error: null 
+    };
   }
 };

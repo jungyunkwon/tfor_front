@@ -21,15 +21,14 @@ export const useProfileStore = defineStore('profile', {
         async updateProfile(updateData: any) {
             this.isLoading = true;
             const { data, error } = await profileService.saveMeProfile(updateData);
-            if (data) {
-                this.profile = data;
+            if (data?.profile) {
+                this.profile = data.profile;
             }
             this.isLoading = false;
             return { data, error };
         },
         async updateSurvey(surveyData: any) {
             this.isLoading = true;
-            // surveyData가 객체 형태면 surveyService에 맞게 전달
             const { data, error } = await surveyService.saveSurveyAnswers(
                 Array.isArray(surveyData) ? surveyData : [surveyData]
             );
