@@ -19,30 +19,7 @@ export const profileService = {
 
         if (error) return { data: null, error };
         
-        if (data) {
-            return {
-                data: {
-                    userProfileId: data.user_profile_id,
-                    nickname: data.nickname,
-                    genderCd: data.gender_cd,
-                    birthYear: data.birth_year,
-                    heightCm: data.height_cm,
-                    jobName: data.job_name,
-                    educationLevelCd: data.education_level_cd,
-                    regionCd: data.region_cd,
-                    introText: data.intro_text,
-                    smokingYn: data.smoking_yn,
-                    drinkingCd: data.drinking_cd,
-                    religionCd: data.religion_cd,
-                    maritalStatusCd: data.marital_status_cd,
-                    childrenYn: data.children_yn,
-                    profileOpenYn: data.profile_open_yn
-                },
-                error: null
-            };
-        }
-
-        return { data: null, error: null };
+        return { data, error: null };
     },
 
     /**
@@ -54,20 +31,7 @@ export const profileService = {
 
         const payload = {
             user_id: user.id,
-            nickname: profileData.nickname,
-            gender_cd: profileData.genderCd,
-            birth_year: profileData.birthYear,
-            height_cm: profileData.heightCm,
-            job_name: profileData.jobName,
-            education_level_cd: profileData.educationLevelCd,
-            region_cd: profileData.regionCd,
-            intro_text: profileData.introText || '',
-            smoking_yn: profileData.smokingYn,
-            drinking_cd: profileData.drinkingCd,
-            religion_cd: profileData.religionCd,
-            marital_status_cd: profileData.maritalStatusCd || 'SINGLE',
-            children_yn: profileData.childrenYn || 'N',
-            profile_open_yn: profileData.profileOpenYn || 'Y',
+            ...profileData,
             update_dt: new Date().toISOString(),
             update_user: user.id
         };

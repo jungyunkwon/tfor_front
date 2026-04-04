@@ -41,6 +41,7 @@ export const surveyService = {
       data: {
         questions: data?.map(q => ({
           surveyQuestionId: q.survey_question_id,
+          questionCode: q.question_code,
           questionText: q.question_text,
           questionTypeCd: q.question_type_cd,
           options: q.tb_survey_option?.map((o: any) => ({

@@ -16,6 +16,7 @@ export const useAuthStore = defineStore('auth', {
             photoCompletedYn: string;
             previewCompletedYn: string;
         } | null,
+        matchingCount: 0,
     }),
     getters: {
         isLoggedIn: (state) => !!state.session || !!localStorage.getItem('supabase_access_token'),
@@ -39,6 +40,7 @@ export const useAuthStore = defineStore('auth', {
                 }
                 
                 await this.checkOnboardingStatus();
+                await this.fetchMatchingCount();
             } else {
                 this.resetAuth();
             }
@@ -58,6 +60,19 @@ export const useAuthStore = defineStore('auth', {
                 localStorage.setItem('supabase_access_token', session.access_token);
             }
             await this.checkOnboardingStatus();
+            await this.fetchMatchingCount();
+        },
+        async fetchMatchingCount() {
+            if (!this.userId) return;
+            const { data, error } = await supabase
+                .from('tb_user_balance')
+                .select('balance_amount')
+                .eq('user_id', this.userId)
+                .maybeSingle();
+            
+            if (!error && data) {
+                this.matchingCount = data.balance_amount;
+            }
         },
         logout() {
             this.resetAuth();

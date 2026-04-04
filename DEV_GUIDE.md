@@ -1,169 +1,155 @@
-tfor/front 개발 가이드 (v1.0)
+[Role]
+당신은 Vue + Quasar + Supabase 기반 프론트엔드 개발 AI입니다.
 
-0) 기본 원칙
-- src/ 구조는 아래 표준을 고정으로 따른다(불필요한 구조 변경 금지).
-- 페이지는 pages/에만 만든다.
-- 재사용 UI는 components/에만 만든다.
-- API 호출은 services/에서만 한다(페이지/컴포넌트에서 직접 fetch 금지).
-- 전역 상태는 stores(Pinia)에서만 관리한다.
-- enum/상수는 enums/에만 둔다.
-- 공통 유틸은 utils/에만 둔다.
-- 전역 스타일은 css/에서만 관리한다.
-- 파일 생성/수정은 “명시된 범위” 내에서만 한다(추측 구현 금지).
+목표는
+“기존 프로젝트의 front/service 코드 패턴을 유지하면서,
+일관성 있고 예측 가능한 코드만 작성하는 것”입니다.
 
-1) 폴더 구조(고정)
-src/
-├── assets/              # 정적 파일 (이미지, 폰트 등)
-├── components/          # 재사용 가능한 UI 컴포넌트
-│   ├── common/          # 공통 컴포넌트 (버튼, 모달, 카드 등)
-│   └── layout/          # 레이아웃 컴포넌트 (헤더, 푸터, 네비 등)
-├── css/                 # 전역 스타일 (app.sass, variables.sass 등)
-├── layouts/             # 페이지 레이아웃
-├── pages/               # 페이지 컴포넌트
-├── router/              # 라우터 설정
-├── enums/               # enum 정의
-├── services/            # API 서비스(HTTP/Supabase SDK 래핑)
-├── stores/              # Pinia 스토어(세션/유저/다이아/도메인 상태)
-├── utils/               # 유틸리티 함수(순수 함수 중심)
-└── App.vue              # 루트 앱 컴포넌트
+구현의 우선순위는
+기능 추가보다 패턴 유지, 재사용성, 책임 분리입니다.
 
-2) 네이밍 규칙
+---
 
-2-1) 파일/폴더
-- 폴더: kebab-case (예: user-profile, content-detail)  ※ 단, 현재 명시 구조는 유지
-- Vue 컴포넌트 파일: PascalCase.vue
-  예) BaseButton.vue, MatchingPage.vue
-- Pinia 스토어: <domain>Store.ts 또는 use<Domain>Store.ts 중 1개로 통일
-  표준: stores/<domain>Store.ts (예: authStore.ts, profileStore.ts)
-- 서비스(API 래퍼): <domain>Service.ts
-  예) profileService.ts, likesService.ts
-- enum: <Domain>Enum.ts 또는 <domain>Enum.ts 중 1개로 통일
-  표준: enums/<domain>Enum.ts (예: likeEnum.ts)
+[Core Rules]
 
-2-2) 코드
-- 변수/함수: camelCase
-- 컴포넌트/타입/인터페이스: PascalCase
-- 상수: SCREAMING_SNAKE_CASE
-- boolean: is/has/can prefix (isLoggedIn, hasProfile)
-- 이벤트 핸들러: onXxx (onClickSendLike)
-- API 함수명: 동사+명사 (getMeProfile, updateMeProfile, sendLike)
+- 기존 코드 스타일과 패턴을 먼저 따른다.
+- 새 방식보다 기존 방식을 우선한다.
+- 한 파일 안에서 여러 책임을 섞지 않는다.
+- UI 로직 / 상태 로직 / API 호출 로직을 분리한다.
+- 추측해서 새로운 구조를 만들지 않는다.
+- 동일한 목적의 코드가 있으면 새로 만들지 말고 재사용하거나 확장한다.
 
-2-3) 에러/코드
-- 화면 표시용 에러 메시지: 사용자 친화 문구
-- 내부 에러 코드(프론트): E_<DOMAIN>_<DETAIL>
-  예) E_AUTH_REQUIRED, E_PROFILE_INVALID, E_LIKE_ALREADY_SENT
+---
 
-3) 환경변수(.env) 사용 규칙
-- Vite 기준: import.meta.env.VITE_*
-- 접근은 utils/env.ts 같은 단일 파일에서만 래핑(직접 여기저기서 접근 금지)
-- 예시 키(필요 시):
-  - VITE_SUPABASE_URL
-  - VITE_SUPABASE_ANON_KEY
-  - VITE_API_BASE_URL (Edge Functions base)
+[Frontend Code Convention]
 
-4) 라우팅/레이아웃 규칙
+## Frontend Development Pattern (Short)
 
-4-1) pages는 “화면 단위”
-- pages/*Page.vue 는 라우터 엔트리다.
-- 레이아웃 선택은 layouts/로만 한다.
+---
 
-4-2) 레이아웃 종류(고정)
-- DefaultLayout.vue: 하단 네비 포함(메인 영역)
-- AuthLayout.vue: 로그인/온보딩 전용
-- ChatLayout.vue: 채팅 전용(하단 네비 숨김)
-- ProfileEditLayout.vue: 프로필 수정 전용
+## 0. Core
 
-4-3) 라우터 가드(권장 규칙)
-- 로그인 필요 페이지: auth guard로 차단
-- 프로필 완료 필요 페이지(매칭/호감/채팅 등): profileComplete guard로 차단
-- 관리자 페이지: role guard로 차단
+* 패턴 일관성 > 기능
+* 단순 구조 유지
+* 역할 명확히 분리
 
-5) 상태관리(Pinia) 규칙
-- store에서만:
-  - 세션(user, access token) 상태
-  - 다이아(보석) 잔액/변경
-  - 현재 매칭 상태/채팅방 id
+---
 
-6) services(API) 규칙
-- services는 “HTTP 호출/응답 변환/에러 매핑”만 담당한다.
-- 페이지/컴포넌트에서 직접 fetch/axios 금지.
-- 인증 토큰 주입은 service 레벨에서 일괄 처리한다.
-- 응답 포맷 표준:
-  - 성공: { data: ... }
-  - 실패: { error: { code, message, details? } }
-- 프론트에서는 error.code 기준으로 분기(문구는 매핑 테이블로 관리).
+## 1. Page
 
-7) 공통 컴포넌트 사용 규칙
-- Base* 컴포넌트는 “스타일/접근성/상태(loading/disabled)” 표준을 제공한다.
-- 화면 구현 시 Base 컴포넌트를 우선 사용하고, 화면 전용 UI는 pages 내부에서만 만든다(가능하면 components로 올리지 않음).
+* Page는 **라우트 기준으로 생성**
+* 같은 화면 내부 단계 → 하위 컴포넌트 분리
+* create/edit → Page 분리 X, mode로 처리
 
-8) 파일 목록 및 설명(고정)
+Page 역할:
 
-8-1) components/common
-- BaseButton.vue            : 전역 버튼(variant, size, disabled, loading)
-- BaseIconButton.vue        : 아이콘 버튼
-- BaseModal.vue             : 공통 모달 컨테이너
-- BaseConfirmDialog.vue     : 확인/취소 다이얼로그
-- BaseToast.vue             : 전역 토스트
-- BaseInput.vue             : 텍스트 입력
-- BaseNumberInput.vue       : 숫자 입력
-- BaseSelect.vue            : 드롭다운
-- BaseRadioGroup.vue        : 라디오 그룹
-- BaseTextarea.vue          : 멀티라인 입력
-- BaseCard.vue              : 카드 UI
-- BaseBadge.vue             : 상태 배지
-- BasePhotoViewer.vue       : 사진 뷰어(확대 불가, 블러/마스킹)
-- BasePhotoUploader.vue     : 이미지 업로드
-- DiamondChip.vue           : 보석 잔액 표시
+* form 상태
+* 이벤트 처리
+* service 호출
+* 결과 UI 처리
 
-8-2) components/layout
-- AppHeader.vue             : 상단 헤더(뒤로가기/타이틀/액션)
-- BottomNavigation.vue      : 하단 네비
-- PageContainer.vue         : 페이지 공통 래퍼
+---
 
-8-3) layouts
-- DefaultLayout.vue         : 하단 네비 포함 기본 레이아웃
-- AuthLayout.vue            : 로그인/온보딩 전용
-- ChatLayout.vue            : 채팅 전용(하단 네비 숨김)
-- ProfileEditLayout.vue     : 프로필 수정 전용
+## 2. Component
 
-8-4) pages
-- LoginPage.vue             : 로그인(카카오 로그인 + 약관 동의 진입)
-- ProfileSetupPage.vue      : 최초 프로필 + 설문 + 사진 업로드 흐름(단계형)
-- ProfilePage.vue           : 프로필 미리보기
-- ProfileEditPage.vue       : 프로필 수정(저장 disabled/토스트)
-- MatchingPage.vue          : 추천 프로필 1명 노출 + 호감 보내기 + 스킵
-- LikeHistoryPage.vue       : 보낸/받은 호감 탭(받은 탭 상단 1명 규칙)
-- ChatPage.vue              : 채팅 + 연락처 공개(상호동의) + 신고 + 종료
-- EvaluationPage.vue        : 평가 제출 완료 전까지 다음 매칭 잠금 + 보석 2개 지급
-- PaymentPage.vue           : 보석 구매(10/30/50/80)
-- ContentListPage.vue       : 컨텐츠 리스트
-- ContentDetailPage.vue     : 컨텐츠 상세
-- InquiryPage.vue           : 문의 작성 + 문의 내역/상태
-- AdminDashboardPage.vue    : 관리자 메인
-- AdminUserManagePage.vue   : 사용자 관리
-- AdminReportManagePage.vue : 신고 처리
-- AdminContentManagePage.vue: 컨텐츠 관리
+* UI + 입력 처리만 담당
+* props / emits 사용
 
-9) 페이지 템플릿(표준 패턴)
-- 모든 Page는 아래 순서로 구성한다:
-  1) route params/query 파싱
-  2) store 상태 조회(computed)
-  3) onMounted에서 초기 로드(action 호출)
-  4) 사용자 액션 핸들러는 onXxx로 정의
+금지:
 
-(예)
-- pages/MatchingPage.vue:
-  - onMounted: matchingStore.loadState(); matchingStore.loadRecommendation();
-  - onClickSendLike: likesStore.sendLike(targetUserId)
-  - onClickSkip: matchingStore.skip(targetUserId)
+* API 호출
+* 전역 상태 변경
 
-10) 테스트/검증 규칙(프론트)
-- code_guide.md에 정의된 테스트 케이스가 있으면 그것을 “최우선”으로 따른다.
-- 네트워크 실패/권한 실패/검증 실패는 토스트로 안내하고 UI 상태를 복구(disabled 해제 등).
+---
 
-11) 금지 사항
-- pages에서 직접 fetch/axios 호출 금지
-- services에서 UI 토스트/라우팅 처리 금지(서비스는 순수하게 데이터/에러만 반환)
-- stores에서 DOM 접근 금지
-- 임의 폴더 추가/구조 변경 금지(명시 없으면 생성하지 않음)
+## 3. Service
+* API 호출 + 응답 정리만 담당
+인증 규칙:
+* userStore로 로그인 상태 확인
+* 세션 있으면 자동 로그인
+* 세션 만료 → 로그인 이동
+
+응답:
+* 200 → 정상
+* 403 → 재로그인 + 이동
+
+데이터:DB 컬럼명 그대로 사용
+
+---
+
+## 4. Store
+
+* 전역 상태만 사용
+
+사용: user, session, 공통 상태
+금지: 단일 페이지 CRUD
+
+---
+
+## 5. Message
+* q.notify 직접 사용 금지
+* notify.ts / dialog.ts 사용
+
+예:
+
+* showSuccess()
+* showError()
+
+---
+
+## 6. Flow
+* 기본: Page → Service → Page
+* 인증: Page → userStore → Service → Page
+
+---
+
+## 7. Naming
+* 이벤트: onClickXxx
+* 상태: isLoading, isSubmitting
+* 함수: get/create/update/delete
+* 에러: E_DOMAIN_DETAIL
+---
+
+## 8. Rule
+* 반복 2회 이상 → 공통화
+* 기존 패턴 우선
+* 불필요한 구조 추가 금지
+---
+
+## 12. 금지 사항
+
+- Page에서 직접 fetch / axios / supabase 호출 금지
+- Service에서 UI 처리 금지
+- Store에서 DOM 접근 금지
+- 근거 없는 util 추가 금지
+- 불필요한 wrapper/abstraction 금지
+- message 문자열 비교로 분기 금지
+- 하드코딩된 예외 처리 남발 금지
+- 과도한 함수 생성 금지
+
+---
+
+[Implementation Style]
+
+코드를 작성할 때 항상 아래를 지킨다:
+
+1. 기존 패턴과 이름을 먼저 맞춘다.
+2. 책임이 맞는 레이어에만 코드를 둔다.
+3. 한 함수는 한 목적만 가지게 한다.
+4. 화면 로직과 API 로직을 섞지 않는다.
+5. 에러와 상태 처리를 반복 가능하게 만든다.
+6. 새 구조를 제안하기보다 기존 구조 안에서 해결한다.
+7. 하드코딩 메시지는 enum 반드시 enum처리를한다.
+
+---
+
+[Output Rule]
+
+코드 작성 전:
+- 기존 패턴과 충돌하는 부분이 있는지 먼저 점검한다.
+- 어떤 레이어(Page / Component / Service)에 둘지 먼저 결정한다.
+
+코드 작성 후:
+- 책임 분리가 깨졌는지 다시 점검한다.
+- 중복 로직이 생겼는지 확인한다.
+- 기존 방식보다 튀는 구현이 없는지 확인한다.

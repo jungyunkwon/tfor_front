@@ -35,8 +35,8 @@
         <section class="col-6">
           <label class="section-label">출생연도</label>
           <q-input
-            :model-value="form.birthYear"
-            @update:model-value="updateField('birthYear', Number($event))"
+            :model-value="form.birth_year"
+            @update:model-value="updateField('birth_year', Number($event))"
             type="number"
             outlined
             dense
@@ -48,8 +48,8 @@
         <section class="col-6">
           <label class="section-label">키 (cm)</label>
           <q-input
-            :model-value="form.height"
-            @update:model-value="updateField('height', Number($event))"
+            :model-value="form.height_cm"
+            @update:model-value="updateField('height_cm', Number($event))"
             type="number"
             outlined
             dense
@@ -64,7 +64,7 @@
         <label class="section-label">거주지역</label>
         <div class="row q-col-gutter-x-sm">
           <q-select
-            :model-value="form.region"
+            :model-value="form.region_cd"
             :options="regionOptions"
             @update:model-value="onRegionChange"
             outlined
@@ -75,15 +75,15 @@
             class="col-6 auth-input"
           />
           <q-select
-            :model-value="form.subregion"
+            :model-value="form.subregion_cd"
             :options="currentSubregions"
-            @update:model-value="updateField('subregion', $event)"
+            @update:model-value="updateField('subregion_cd', $event)"
             outlined
             dense
             emit-value
             map-options
             behavior="dialog"
-            :disable="!form.region"
+            :disable="!form.region_cd"
             class="col-6 auth-input"
           />
         </div>
@@ -105,9 +105,9 @@
         <section>
           <label class="section-label">직업</label>
           <q-select
-            :model-value="form.job"
+            :model-value="form.job_name"
             :options="jobOptions"
-            @update:model-value="updateField('job', $event)"
+            @update:model-value="updateField('job_name', $event)"
             outlined
             dense
             emit-value
@@ -116,7 +116,7 @@
             class="auth-input"
           />
           <q-input
-            v-if="form.job === 'ETC'"
+            v-if="form.job_name === 'ETC'"
             :model-value="form.job_etc"
             @update:model-value="updateField('job_etc', $event)"
             outlined
@@ -129,9 +129,9 @@
         <section>
           <label class="section-label">학력</label>
           <q-select
-            :model-value="form.education"
+            :model-value="form.education_level_cd"
             :options="educationOptions"
-            @update:model-value="updateField('education', $event)"
+            @update:model-value="updateField('education_level_cd', $event)"
             outlined
             dense
             emit-value
@@ -140,7 +140,7 @@
             class="auth-input"
           />
           <q-input
-            v-if="form.education === 'ETC' || form.education === 'doctor'"
+            v-if="form.education_level_cd === 'ETC' || form.education_level_cd === 'doctor'"
             :model-value="form.education_etc"
             @update:model-value="updateField('education_etc', $event)"
             outlined
@@ -153,9 +153,9 @@
         <section>
           <label class="section-label">종교</label>
           <q-select
-            :model-value="form.religion"
+            :model-value="form.religion_cd"
             :options="religionOptions"
-            @update:model-value="updateField('religion', $event)"
+            @update:model-value="updateField('religion_cd', $event)"
             outlined
             dense
             emit-value
@@ -164,7 +164,7 @@
             class="auth-input"
           />
           <q-input
-            v-if="form.religion === 'OTHER'"
+            v-if="form.religion_cd === 'OTHER'"
             :model-value="form.religion_etc"
             @update:model-value="updateField('religion_etc', $event)"
             outlined
@@ -179,10 +179,10 @@
       <section>
         <label class="section-label">흡연 여부</label>
         <SelectChip
-          :model-value="form.smoking"
+          :model-value="form.smoking_yn"
           :options="smokingOptions"
           :multiple="false"
-          @update:model-value="updateField('smoking', $event)"
+          @update:model-value="updateField('smoking_yn', $event)"
         />
       </section>
 
@@ -190,8 +190,8 @@
       <section>
         <label class="section-label">음주 빈도</label>
         <q-btn-toggle
-          :model-value="form.drinking"
-          @update:model-value="updateField('drinking', $event)"
+          :model-value="form.drinking_cd"
+          @update:model-value="updateField('drinking_cd', $event)"
           unelevated
           no-caps
           rounded
@@ -350,16 +350,16 @@ const stockStyleOptions = STOCK_OPTIONS.map(o => ({ label: o.name, value: o.code
 const jobTypeStatusOptions = JOB_TYPE_STATUS_OPTIONS.map(o => ({ label: o.name, value: o.code }));
 
 const currentSubregions = computed(() => {
-  if (!form.value.region) return [];
-  const list = SUBREGION_OPTIONS[form.value.region] || [];
+  if (!form.value.region_cd) return [];
+  const list = SUBREGION_OPTIONS[form.value.region_cd] || [];
   return list.map(o => ({ label: o.name, value: o.code }));
 });
 
 const onRegionChange = (val) => {
   emit('update:modelValue', {
     ...form.value,
-    region: val,
-    subregion: null
+    region_cd: val,
+    subregion_cd: null
   });
 };
 
@@ -370,16 +370,16 @@ const isValid = computed(() => {
   const baseValid = !!(
     m.nickname &&
     m.gender_cd &&
-    m.birthYear &&
-    m.region &&
-    m.subregion &&
-    m.height &&
+    m.birth_year &&
+    m.region_cd &&
+    m.subregion_cd &&
+    m.height_cm &&
     m.bodyShape &&
-    m.job &&
-    m.education &&
-    m.religion &&
-    m.smoking &&
-    m.drinking &&
+    m.job_name &&
+    m.education_level_cd &&
+    m.religion_cd &&
+    m.smoking_yn &&
+    m.drinking_cd &&
     m.jobType &&
     Array.isArray(m.assetInfo) && m.assetInfo.length > 0 &&
     Array.isArray(m.stocks) && m.stocks.length > 0
@@ -388,9 +388,9 @@ const isValid = computed(() => {
   if (!baseValid) return false;
 
   // 기타 입력 체크
-  if (m.job === 'ETC' && !m.job_etc) return false;
-  if ((m.education === 'ETC' || m.education === 'doctor') && !m.education_etc) return false;
-  if (m.religion === 'OTHER' && !m.religion_etc) return false;
+  if (m.job_name === 'ETC' && !m.job_etc) return false;
+  if ((m.education_level_cd === 'ETC' || m.education_level_cd === 'doctor') && !m.education_etc) return false;
+  if (m.religion_cd === 'OTHER' && !m.religion_etc) return false;
 
   // 경제활동 상세 체크
   if (m.jobType === 'employee') {

@@ -52,11 +52,14 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, markRaw } from 'vue';
+import { ref, computed, reactive, markRaw, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { showErrorToast, showSuccessToast } from 'src/utils/notify';
 import { useProfileStore } from 'src/stores/ProfileStore';
 import { signupService } from 'src/services/signupService';
+import { surveyService } from 'src/services/surveyService';
+import { termsService } from 'src/services/termsService';
+import { photoService } from 'src/services/photoService';
 
 import StepProgressBar from 'src/components/common/StepProgressBar.vue';
 import Step1Basic from 'src/components/signup/Step1Basic.vue';
@@ -98,20 +101,20 @@ const signupData = reactive({
   basic: {
     nickname: '',
     gender_cd: 'MALE',
-    birthYear: 1995,
-    height: 175,
-    region: 'SEOUL',
-    subregion: 'GANGNAM',
+    birth_year: 1995,
+    height_cm: 175,
+    region_cd: 'SEOUL',
+    subregion_cd: 'GANGNAM',
     bodyShape: BODY_SHAPE_OPTIONS[0].code,
-    job: JOB_OPTIONS[0].code,
+    job_name: JOB_OPTIONS[0].code,
     job_etc: '',
-    education: EDUCATION_OPTIONS[2].code,
+    education_level_cd: EDUCATION_OPTIONS[2].code,
     education_etc: '',
-    religion: RELIGION_OPTIONS[0].code,
+    religion_cd: RELIGION_OPTIONS[0].code,
     religion_etc: '',
     politics: 'NEUTRAL',
-    smoking: SMOKING_OPTIONS[1].code,
-    drinking: DRINKING_FREQ_OPTIONS[3].code,
+    smoking_yn: SMOKING_OPTIONS[1].code,
+    drinking_cd: DRINKING_FREQ_OPTIONS[3].code,
     drinkingType: [],
     diet: 'korean',
     jobType: 'employee',
@@ -209,61 +212,135 @@ const prevStep = () => {
   }
 };
 
+const questionsMap = ref({});
+const termsListMap = ref({});
+
+onMounted(async () => {
+  // 1. 설문 질문 리스트 가져오기 (전체 그룹)
+  const groupCodes = ['LIFESTYLE', 'RELATIONSHIP', 'PERSONALITY', 'VALUES', 'TARGET'];
+  for (const code of groupCodes) {
+    const res = await surveyService.getSurveyQuestions(code);
+    if (res.data?.questions) {
+      res.data.questions.forEach(q => {
+        // questionCode를 키로 맵에 저장 (Step 컴포넌트의 signupData 키와 매핑됨)
+        const optMap = {};
+        if (q.options) {
+          q.options.forEach(o => { optMap[o.optionValue] = o.surveyOptionId; });
+        }
+        questionsMap.value[q.questionCode] = {
+          id: q.surveyQuestionId,
+          type: q.questionTypeCd,
+          options: optMap
+        };
+      });
+    }
+  }
+
+  // 2. 약관 리스트 가져오기
+  const resTerms = await termsService.getCurrentTermsList();
+  if (resTerms.data?.termsList) {
+    resTerms.data.termsList.forEach(t => {
+      // terms_type_cd로 매핑 (StepFinal의 agreements 키 'privacy', 'service'와 대조)
+      const key = t.termsTypeCd === 'PRIVACY' ? 'privacy' : t.termsTypeCd === 'SERVICE' ? 'service' : t.termsTypeCd.toLowerCase();
+      termsListMap.value[key] = t.termsId;
+    });
+  }
+});
+
 const onComplete = async () => {
   if (isSubmitting.value) return;
   isSubmitting.value = true;
 
   try {
+    // 0. Ensure user record exists in tb_user (prevents FK violation)
+    const resInit = await signupService.initializeUser();
+    if (resInit.error) throw new Error('사용자 세션 초기화에 실패했습니다.');
+
     // 1. Profile Data Mapping (tb_user_profile)
     const profilePayload = {
       nickname: signupData.basic.nickname,
-      genderCd: signupData.basic.gender_cd,
-      birthYear: signupData.basic.birthYear,
-      heightCm: signupData.basic.height,
-      jobName: signupData.basic.job,
-      educationLevelCd: signupData.basic.education,
-      regionCd: signupData.basic.region,
-      introText: signupData.basic.intro_text || '',
-      smokingYn: signupData.basic.smoking === 'yes' ? 'Y' : 'N',
-      drinkingCd: signupData.basic.drinking,
-      religionCd: signupData.basic.religion,
-      maritalStatusCd: 'SINGLE', // 기본값 설정
-      childrenYn: 'N', // 기본값
-      profileOpenYn: 'Y'
+      gender_cd: signupData.basic.gender_cd,
+      birth_year: signupData.basic.birth_year,
+      height_cm: signupData.basic.height_cm,
+      job_name: signupData.basic.job_name,
+      education_level_cd: signupData.basic.education_level_cd,
+      region_cd: signupData.basic.region_cd,
+      intro_text: signupData.basic.intro_text || '',
+      smoking_yn: signupData.basic.smoking_yn === 'SMOKER' ? 'Y' : 'N',
+      drinking_cd: signupData.basic.drinking_cd,
+      religion_cd: signupData.basic.religion_cd,
+      marital_status_cd: 'SINGLE',
+      children_yn: 'N',
+      profile_open_yn: 'Y'
     };
-
-    // 2. Survey Data Mapping (lifestyle, relationship, personality, values, target)
-    // survey_question_id는 백엔드에서 매핑하거나, 여기서 정의한 구조대로 JSON 전송
-    const surveyPayload = {
-      lifestyle: signupData.lifestyle,
-      relationship: signupData.relationship,
-      personality: signupData.personality,
-      values: signupData.values,
-      target: signupData.target,
-      // 추가 설문 필드들 (tb_user_profile에 없는 필드)
-      extra_basic: {
-        bodyShape: signupData.basic.bodyShape,
-        politics: signupData.basic.politics,
-        drinkingType: signupData.basic.drinkingType,
-        diet: signupData.basic.diet,
-        jobType: signupData.basic.jobType,
-        assetInfo: signupData.basic.assetInfo
-      }
-    };
-
-    // 3. API Call
     const resProfile = await profileStore.updateProfile(profilePayload);
-    if (resProfile.error) throw new Error(resProfile.error.message || '프로필 구성을 실패했습니다.');
+    if (resProfile.error) throw new Error('프로필 발송에 실패했습니다.');
 
-    const resSurvey = await profileStore.updateSurvey(surveyPayload);
-    if (resSurvey.error) throw new Error(resSurvey.error.message || '가치관 설문을 저장하지 못했습니다.');
+    // 2. Survey Transformation & Submit
+    const surveyAnswers = [];
+    const categories = ['basic', 'lifestyle', 'relationship', 'personality', 'values', 'target'];
+    categories.forEach(cat => {
+      Object.keys(signupData[cat]).forEach(code => {
+        const qInfo = questionsMap.value[code];
+        if (qInfo) {
+          const val = signupData[cat][code];
+          surveyAnswers.push({
+            surveyQuestionId: qInfo.id,
+            surveyOptionId: qInfo.options[val] || null,
+            answerText: qInfo.type === 'TEXT' || qInfo.type === 'TEXTAREA' ? val : null,
+            answerNumber: qInfo.type === 'NUMBER' ? Number(val) : null,
+            answerJson: qInfo.type === 'JSON' || Array.isArray(val) ? { value: val } : null
+          });
+        }
+      });
+    });
 
-    // 4. signup Complete Flag
+    if (surveyAnswers.length > 0) {
+      const resSurvey = await profileStore.updateSurvey(surveyAnswers);
+      if (resSurvey.error) throw new Error('설문 저장에 실패했습니다.');
+    }
+
+    // 3. Terms Agreement Submit
+    const agreements = Object.keys(signupData.final.agreements)
+      .map(key => ({
+        termsId: termsListMap.value[key],
+        agreedYn: signupData.final.agreements[key] ? 'Y' : 'N'
+      }))
+      .filter(a => !!a.termsId);
+
+    if (agreements.length > 0) {
+      await termsService.agreeTerms({
+        agreements,
+        ipAddress: '127.0.0.1', // 클라이언트에서는 가져오기 어려우므로 백엔드/RPC 처리 권장
+        userAgent: navigator.userAgent
+      });
+    }
+
+    // 4. Photos Meta Save (Binary upload logic should be added to storageService)
+    if (signupData.final.photos && signupData.final.photos.length > 0) {
+      for (let i = 0; i < signupData.final.photos.length; i++) {
+        const photo = signupData.final.photos[i];
+        if (photo) {
+          // TODO: 실제 Storage 업로드 후 URL을 storage_path로 사용해야 함.
+          // 여기서는 임시 데이터 처리
+          await photoService.uploadProfilePhoto({
+            storagePath: photo, // 현재는 base64가 들어있을 확률이 높음 (StepFinal 기준)
+            sortNo: i + 1,
+            mainPhotoYn: i === 0 ? 'Y' : 'N',
+            photoTypeCd: 'BASIC'
+          });
+        }
+      }
+    }
+
+    // 5. Onboarding Status Update
     await signupService.completeOnboardingStep('PROFILE', 'Y');
     await signupService.completeOnboardingStep('SURVEY', 'Y');
+    await signupService.completeOnboardingStep('PHOTO', 'Y');
+    await signupService.completeOnboardingStep('PREVIEW', 'Y');
 
-    showSuccessToast('프로필 완성이 완료되었습니다! 환영합니다.');
-    router.replace('/');
+    showSuccessToast('회원가입 절차가 모두 완료되었습니다!');
+    router.replace('/matching');
 
   } catch (error) {
     console.error(error);

@@ -14,7 +14,7 @@ export const matchingService = {
     // 진행 중인 매칭(ACTIVE) 조회
     const { data: matchData, error: matchError } = await supabase
       .from('tb_match')
-      .select('match_id, match_status_cd')
+      .select('match_id, match_status_cd, user_1_id, user_2_id')
       .or(`user_1_id.eq.${user.id},user_2_id.eq.${user.id}`)
       .eq('match_status_cd', 'ACTIVE')
       .maybeSingle();
@@ -37,6 +37,7 @@ export const matchingService = {
         hasActiveMatch: !!matchData,
         matchId: matchData?.match_id,
         chatRoomId: chatRoomId,
+        partnerId: matchData ? (matchData.user_1_id === user.id ? matchData.user_2_id : matchData.user_1_id) : null,
         canReceiveRecommendation: !matchData // 매칭 중이 아니면 추천 가능
       },
       error: null

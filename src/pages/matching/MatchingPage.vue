@@ -10,7 +10,14 @@
       <div>
         <q-icon name="person_search" size="64px" color="grey-4" />
         <div class="text-h6 text-grey-5 q-mt-md">현재 추천할 수 있는 인연이 없습니다.</div>
-        <div class="text-body2 text-grey-5 q-mt-sm">잠시 후 다시 시도해 주세요.</div>
+        <div class="text-body2 text-grey-5 q-mt-sm">프로필을 완성하고 더 많은 인연을 만나보세요!</div>
+        <q-btn
+          unelevated
+          color="primary"
+          class="q-mt-md q-py-md text-weight-bold"
+          label="프로필 완성하기"
+          @click="goToProfile"
+        />
       </div>
     </div>
 
@@ -82,14 +89,14 @@
             color="grey-2"
             text-color="grey-7"
             class="col q-py-md text-weight-bold"
-            label="거절"
-            @click="showRejectDialog = true"
+            :label="matchingStore.matchStatus === 'RECEIVED' ? '거절' : '넘기기'"
+            @click="onClickRejectBtn"
           />
           <q-btn
             unelevated
             color="primary"
             class="col-8 q-py-md text-weight-bold"
-            label="수락"
+            :label="matchingStore.matchStatus === 'RECEIVED' ? '수락' : '호감 보내기'"
             @click="onClickAccept"
           />
         </template>
@@ -135,8 +142,8 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { useMatchingStore } from '../stores/MatchingStore';
-import { useAuthStore } from '../stores/AuthStore';
+import { useMatchingStore } from '../../stores/MatchingStore';
+import { useAuthStore } from '../../stores/AuthStore';
 
 const $q = useQuasar();
 const router = useRouter();
@@ -146,6 +153,15 @@ const authStore = useAuthStore();
 const showRejectDialog = ref(false);
 const rejectReason = ref('');
 const rejecting = ref(false);
+
+const onClickRejectBtn = () => {
+  if (matchingStore.matchStatus === 'RECEIVED') {
+    showRejectDialog.value = true;
+  } else {
+    // 추천 넘기기
+    matchingStore.skipRecommendation(matchingStore.currentProfile?.userId);
+  }
+};
 
 const qaData = [
   { 
@@ -176,18 +192,26 @@ const onClickAccept = async () => {
     return;
   }
 
-  // 수락 처리
-  const { error } = await matchingStore.acceptLike(matchingStore.currentProfile?.likeId);
-  if (error) {
-    $q.notify({ type: 'negative', message: '오류가 발생했습니다. 다시 시도해 주세요.' });
-    return;
-  }
+  const profile = matchingStore.currentProfile;
+  if (!profile) return;
 
-  $q.notify({
-    type: 'positive',
-    message: '수락되었습니다! 상대방이 수락하면 연락처가 공개됩니다.',
-    position: 'top'
-  });
+  if (matchingStore.matchStatus === 'RECEIVED') {
+    // 수락 처리
+    const { error } = await matchingStore.acceptLike(profile.likeId);
+    if (!error) {
+      $q.notify({ type: 'positive', message: '수락되었습니다! 상대방이 수락하면 연락처가 공개됩니다.' });
+    } else {
+      $q.notify({ type: 'negative', message: '오류가 발생했습니다. 다시 시도해 주세요.' });
+    }
+  } else {
+    // 호감 보내기
+    const { error } = await matchingStore.sendLike(profile.userId);
+    if (!error) {
+      $q.notify({ type: 'positive', message: '호감을 보냈습니다!' });
+    } else {
+      $q.notify({ type: 'negative', message: '오류가 발생했습니다.' });
+    }
+  }
 };
 
 const onConfirmReject = async () => {
@@ -214,6 +238,10 @@ const onConfirmReject = async () => {
 
 const onClickEndMatching = () => {
   router.push('/evaluation');
+};
+
+const goToProfile = () => {
+  router.push('/profile');
 };
 
 onMounted(async () => {

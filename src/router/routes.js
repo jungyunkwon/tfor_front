@@ -5,8 +5,10 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', redirect: '/matching' },
-      { path: 'matching', component: () => import('pages/MatchingPage.vue') },
-      { path: 'profile', component: () => import('pages/ProfilePage.vue') },
+      { path: 'matching', component: () => import('pages/matching/MatchingPage.vue') },
+      { path: 'evaluation', component: () => import('pages/matching/ReviewEdit.vue') },
+      { path: 'profile', component: () => import('pages/profile/ProfilePage.vue') },
+      { path: 'payment', component: () => import('pages/payment/PaymentPage.vue') },
     ]
   },
   {

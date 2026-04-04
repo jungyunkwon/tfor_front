@@ -80,4 +80,49 @@ export const signupService = {
             error: null 
         };
     },
+
+    /**
+     * 사용자의 기본 레코드를 tb_user에 생성합니다. (initializeUser)
+     * 이미 존재하는 경우 무시합니다 (upsert).
+     */
+    async initializeUser() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
+
+        const { data, error } = await supabase
+            .from('tb_user')
+            .upsert({
+                user_id: user.id,
+                user_status_cd: 'ACTIVE',
+                join_type_cd: 'KAKAO', // 기본값, 실제론 가입 경로에 따라 달라질 수 있음
+                profile_completed_yn: 'N',
+                survey_completed_yn: 'N',
+                photo_completed_yn: 'N',
+                preview_completed_yn: 'N',
+                matching_locked_yn: 'N',
+                del_yn: 'N',
+                update_user: user.id
+            }, { onConflict: 'user_id' })
+            .select()
+            .single();
+
+        if (error) return { data, error };
+
+        // tb_user_balance 초기화 (없을 경우에만)
+        const { data: balanceData } = await supabase
+            .from('tb_user_balance')
+            .select('user_id')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+        if (!balanceData) {
+            await supabase.from('tb_user_balance').insert({
+                user_id: user.id,
+                balance_amount: 10, // 신규 가입 보너스 10개 예시
+                update_user: user.id
+            });
+        }
+
+        return { data, error };
+    }
 };
