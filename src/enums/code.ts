@@ -7,6 +7,17 @@ export const BODY_SHAPE_OPTIONS = [
     { code: 'thin', name: '마름' },
 ];
 
+export const GENDER_OPTIONS = [
+    { code: 'MALE', name: '남성' },
+    { code: 'FEMALE', name: '여성' },
+];
+
+export const MARITAL_STATUS_OPTIONS = [
+    { code: 'SINGLE', name: '미혼' },
+    { code: 'DIVORCED', name: '돌싱' },
+    { code: 'WIDOWED', name: '사별' },
+];
+
 export const EDUCATION_OPTIONS = [
     { code: 'middle', name: '중졸' },
     { code: 'high', name: '고졸' },

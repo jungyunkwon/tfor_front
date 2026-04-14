@@ -58,12 +58,11 @@ const profile = ref(null);
 const menuList = [
   { id: 'basic_info', label: '기본정보' },
   { id: 'values_qna', label: '가치관 답변' },
+  { id: 'match_criteria', label: '매칭 기준 설정' },
   { id: 'block_acquaintances', label: '아는사람 만나지 않기' },
-  { id: 'counseling', label: '고민 상담' },
   { id: 'customer_center', label: '고객센터' },
   { id: 'terms', label: '이용약관' },
   { id: 'alarm_settings', label: '알림설정' },
-  { id: 'match_criteria', label: '매칭 기준 설정' },
 ];
 
 const fetchProfile = async () => {
@@ -79,7 +78,21 @@ const fetchProfile = async () => {
 }
 
 const onSelectMenu = (menu) => {
-  $q.notify({ message: `[${menu.label}] 메뉴 준비 중입니다.`, color: 'grey-8' });
+  if (menu.id === 'basic_info') {
+    router.push('/profile/basic');
+  } else if (menu.id === 'values_qna') {
+    router.push('/profile/values');
+  } else if (menu.id === 'match_criteria') {
+    router.push('/target/edit');
+  } else if (menu.id === 'block_acquaintances') {
+    router.push('/profile/block-contacts');
+  } else if (menu.id === 'customer_center') {
+    router.push('/profile/customer-center');
+  } else if (menu.id === 'alarm_settings') {
+    router.push('/profile/alarm');
+  } else {
+    $q.notify({ message: `[${menu.label}] 메뉴 준비 중입니다.`, color: 'grey-8' });
+  }
 };
 
 const onClickLogout = async () => {

@@ -64,12 +64,55 @@ export const inquiryService = {
       data: {
         items: data?.map(i => ({
           inquiryId: i.inquiry_id,
+          inquiryTypeCd: i.inquiry_type_cd,
           title: i.title,
           content: i.content,
-          statusCd: i.inquiry_status_cd,
-          answer: i.tb_inquiry_answer?.[0]
+          answerStatusCd: i.inquiry_status_cd,
+          createDt: i.create_dt,
+          answeredYn: !!(i.tb_inquiry_answer?.[0]?.answer_content),
         })),
         totalCount: count || 0
+      },
+      error: null
+    };
+  },
+
+  /**
+   * 문의 상세 + 답변 내용 조회 (getInquiryDetail)
+   */
+  async getInquiryDetail(inquiryId: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
+
+    const { data, error } = await supabase
+      .from('tb_inquiry')
+      .select(`
+        inquiry_id,
+        inquiry_type_cd,
+        title,
+        content,
+        inquiry_status_cd,
+        create_dt,
+        tb_inquiry_answer!inquiry_id (answer_content, answered_dt)
+      `)
+      .eq('inquiry_id', inquiryId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (error) return { data: null, error };
+
+    const answer = data?.tb_inquiry_answer?.[0];
+
+    return {
+      data: {
+        inquiryId: data.inquiry_id,
+        inquiryTypeCd: data.inquiry_type_cd,
+        title: data.title,
+        content: data.content,
+        answerStatusCd: data.inquiry_status_cd,
+        createDt: data.create_dt,
+        answerContent: answer?.answer_content || null,
+        answeredDt: answer?.answered_dt || null,
       },
       error: null
     };
