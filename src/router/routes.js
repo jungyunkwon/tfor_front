@@ -13,6 +13,7 @@ const routes = [
       { path: 'profile/customer-center', component: () => import('pages/profile/CustomerCenterPage.vue') },
       { path: 'profile/alarm', component: () => import('pages/profile/AlarmPage.vue') },
       { path: 'profile/block-contacts', component: () => import('pages/profile/ProfileBlockContactsEdit.vue') },
+      { path: 'profile/terms', component: () => import('pages/profile/TermsPage.vue') },
       { path: 'target/edit', component: () => import('pages/target/TargetEdit.vue') },
       { path: 'payment', component: () => import('pages/payment/PaymentPage.vue') },
     ]

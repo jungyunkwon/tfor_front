@@ -88,6 +88,8 @@ const onSelectMenu = (menu) => {
     router.push('/profile/block-contacts');
   } else if (menu.id === 'customer_center') {
     router.push('/profile/customer-center');
+  } else if (menu.id === 'terms') {
+    router.push('/profile/terms');
   } else if (menu.id === 'alarm_settings') {
     router.push('/profile/alarm');
   } else {
