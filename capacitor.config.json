@@ -1,0 +1,5 @@
+{
+  "appId": "com.tfor.app",
+  "appName": "티포",
+  "webDir": "dist/spa"
+}

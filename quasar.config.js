@@ -59,8 +59,12 @@ export default defineConfig((ctx) => {
       // polyfillModulePreload: true,
       // distDir
 
-      // extendViteConf (viteConf) {},
-      // viteVuePluginOptions: {},
+      css: {
+        preprocessorOptions: {
+          sass: { api: 'legacy' },
+          scss: { api: 'legacy' }
+        }
+      },
 
       vitePlugins: [
         ['@intlify/unplugin-vue-i18n/vite', {
@@ -83,7 +87,11 @@ export default defineConfig((ctx) => {
             useFlatConfig: true
           }
         }, { server: false }]
-      ]
+      ],
+      extendViteConf(viteConf) {
+        viteConf.build = viteConf.build || {}
+        viteConf.build.cssMinify = 'esbuild'
+      }
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#devserver

@@ -113,14 +113,12 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useQuasar } from 'quasar';
 import RadioCard from 'src/components/common/RadioCard.vue';
 import SelectChip from 'src/components/common/SelectChip.vue';
 import { surveyService } from 'src/services/surveyService';
 import { showSuccessToast, showErrorToast } from 'src/utils/notify';
 
 const router = useRouter();
-const $q = useQuasar();
 
 const loading = ref(true);
 const saving = ref(false);
@@ -236,7 +234,7 @@ const onSave = async () => {
       return ans.surveyOptionId || ans.answerText || ans.answerNumber || ans.answerJson;
     });
 
-    const { data, error } = await surveyService.saveSurveyAnswers(answersToSave);
+    const { error } = await surveyService.saveSurveyAnswers(answersToSave);
     if (error) throw error;
 
     showSuccessToast('가치관 답변이 저장되었습니다.');

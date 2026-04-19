@@ -182,7 +182,7 @@ const onBlock = async () => {
 
   saving.value = true;
   try {
-    const { data, error } = await blockService.createBlock({
+    const { error } = await blockService.createBlock({
       blockedUserId: form.blocked_user_id.trim(),
       blockReasonCd: form.block_reason_cd || undefined,
     });
@@ -211,7 +211,7 @@ const onUnblock = (block) => {
   }).onOk(async () => {
     unblockingId.value = block.blockId;
     try {
-      const { data, error } = await blockService.removeBlock(block.blockId);
+      const { error } = await blockService.removeBlock(block.blockId);
       if (error) throw error;
       showSuccessToast('차단이 해제되었습니다.');
       await fetchBlockList();

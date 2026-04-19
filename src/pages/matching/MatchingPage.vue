@@ -164,7 +164,7 @@
   </q-page>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
@@ -175,36 +175,36 @@ import { likesService } from '../../services/likesService';
 import { chatService } from '../../services/chatService';
 
 // -- 화면 상태값 변수들 --
-const pageMode = ref<'loading' | 'recommendation' | 'waiting' | 'matched' | 'empty' | 'error'>('loading');
+const pageMode = ref('loading');
 
 // Case 1 추천 관련
-const recommendationUserId = ref<string>('');
-const recommendationProfile = ref<any>(null);
-const recommendationReason = ref<string>('');
+const recommendationUserId = ref('');
+const recommendationProfile = ref(null);
+const recommendationReason = ref('');
 
 // Case 2 호감 대기 관련
-const pendingLikeId = ref<string>('');
-const pendingLikeStatusCd = ref<string>('');
-const expireDt = ref<string>('');
-const remainingSeconds = ref<number>(0);
+const pendingLikeId = ref('');
+const pendingLikeStatusCd = ref('');
+const expireDt = ref('');
+const remainingSeconds = ref(0);
 
 // Case 2 성사 완료 (Matched) 관련
-const activeMatchId = ref<string>('');
-const activeChatRoomId = ref<string>('');
-const activeTargetUser = ref<any>(null);
-const contactVisibleYn = ref<boolean>(false);
-const targetContactInfo = ref<string | null>(null);
+const activeMatchId = ref('');
+const activeChatRoomId = ref('');
+const activeTargetUser = ref(null);
+const contactVisibleYn = ref(false);
+const targetContactInfo = ref(null);
 
 // 통신 중복방지 및 오류 메시지
-const loading = ref<boolean>(true);
-const likeSubmitting = ref<boolean>(false);
-const skipSubmitting = ref<boolean>(false);
-const endSubmitting = ref<boolean>(false);
-const errorMessage = ref<string>('');
+const loading = ref(true);
+const likeSubmitting = ref(false);
+const skipSubmitting = ref(false);
+const endSubmitting = ref(false);
+const errorMessage = ref('');
 
 const $q = useQuasar();
 const router = useRouter();
-let timerId: ReturnType<typeof setInterval> | null = null;
+let timerId = null;
 
 // 남은 시간 포맷 계산 (HH:mm:ss)
 const formattedRemainingTime = computed(() => {
@@ -245,7 +245,7 @@ const stopTimer = () => {
 /**
  * 에러 노출용 내부 함수
  */
-const setPageToError = (msg: string) => {
+const setPageToError = (msg) => {
   errorMessage.value = msg;
   pageMode.value = 'error';
   loading.value = false;
@@ -333,6 +333,7 @@ const initMatchingState = async () => {
     }
 
   } catch (err) {
+    console.error(err);
     setPageToError('일시적인 오류가 발생했습니다.');
   } finally {
     loading.value = false;
@@ -411,7 +412,7 @@ const onClickSkip = async () => {
 /**
  * 5. 연락처 공개 동의 처리
  */
-const handleContactExchange = async (agreeYn: 'Y' | 'N') => {
+const handleContactExchange = async (agreeYn) => {
   if (!activeMatchId.value) return;
   
   const { data, error } = await chatService.requestContactExchange(activeMatchId.value, agreeYn);

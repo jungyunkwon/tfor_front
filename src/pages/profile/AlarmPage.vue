@@ -132,7 +132,7 @@ const onSave = async () => {
   if (saving.value) return;
   saving.value = true;
   try {
-    const { data, error } = await alarmService.saveMyAlarmSettings({
+    const { error } = await alarmService.saveMyAlarmSettings({
       match_alarm_yn: matchAlarm.value ? 'Y' : 'N',
       chat_alarm_yn: chatAlarm.value ? 'Y' : 'N',
       notice_alarm_yn: noticeAlarm.value ? 'Y' : 'N',

@@ -118,7 +118,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import SelectChip from 'src/components/common/SelectChip.vue';
-import { showSuccessToast, showErrorToast, showInfoToast } from 'src/utils/notify';
+import { showInfoToast } from 'src/utils/notify';
 
 const router = useRouter();
 

@@ -371,7 +371,7 @@ const onSave = async () => {
       profile_open_yn: form.profileOpenYn,
     };
 
-    const { data, error } = await profileService.saveMeProfile(payload);
+    const { error } = await profileService.saveMeProfile(payload);
     if (error) throw error;
 
     $q.notify({ type: 'positive', message: '기본정보가 저장되었습니다.' });

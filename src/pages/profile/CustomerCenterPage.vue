@@ -218,7 +218,7 @@ const onSubmit = async () => {
   if (!isFormValid.value || saving.value) return;
   saving.value = true;
   try {
-    const { data, error } = await inquiryService.createInquiry({
+    const { error } = await inquiryService.createInquiry({
       inquiryTypeCd: form.inquiryTypeCd,
       title: form.title.trim(),
       content: form.content.trim(),

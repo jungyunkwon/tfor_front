@@ -183,7 +183,7 @@ const onSave = async () => {
       agreedYn: agreementMap[t.termsId] ? 'Y' : 'N',
     }));
 
-    const { data, error } = await termsService.agreeTerms({
+    const { error } = await termsService.agreeTerms({
       agreements,
       ipAddress: '',  // 클라이언트에서 IP 취득 불가 - 빈 값으로 전송
       userAgent: navigator.userAgent,
