@@ -35,8 +35,9 @@ export const reviewService = {
 
     if (error) return { data: null, error };
 
-    // 매칭 테이블의 후기 완료 여부(review_completed_yn)를 업데이트 (트랜잭션 권장)
-    await supabase.from('tb_match').update({ review_completed_yn: 'Y' }).eq('match_id', reviewParams.matchId);
+    // 매칭 테이블의 내 리뷰 완료 여부 업데이트
+    const columnToUpdate = match?.user_1_id === user.id ? 'user_1_review_completed_yn' : 'user_2_review_completed_yn';
+    await supabase.from('tb_match').update({ [columnToUpdate]: 'Y' }).eq('match_id', reviewParams.matchId);
 
     return {
       data: {
@@ -55,12 +56,12 @@ export const reviewService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
 
+    // 내가 1번 유저이면서 리뷰를 안 했거나, 2번 유저이면서 리뷰를 안 한 ENDED 매칭 조회
     const { data: matchData, error: matchError } = await supabase
       .from('tb_match')
       .select('match_id, user_1_id, user_2_id')
-      .or(`user_1_id.eq.${user.id},user_2_id.eq.${user.id}`)
       .eq('match_status_cd', 'ENDED')
-      .eq('review_completed_yn', 'N')
+      .or(`and(user_1_id.eq.${user.id},user_1_review_completed_yn.eq.N),and(user_2_id.eq.${user.id},user_2_review_completed_yn.eq.N)`)
       .maybeSingle();
 
     if (matchError) return { data: null, error: matchError };

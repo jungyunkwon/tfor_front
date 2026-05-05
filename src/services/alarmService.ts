@@ -85,7 +85,7 @@ export const alarmService = {
 
     const { data, error } = await supabase
       .from('tb_alarm_setting')
-      .select('user_id, match_alarm_yn, chat_alarm_yn, notice_alarm_yn')
+      .select('user_id, matching_alarm_yn, chat_alarm_yn, notice_alarm_yn')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -96,7 +96,7 @@ export const alarmService = {
       return {
         data: {
           user_id: user.id,
-          match_alarm_yn: 'Y',
+          matching_alarm_yn: 'Y',
           chat_alarm_yn: 'Y',
           notice_alarm_yn: 'Y',
         },
@@ -112,7 +112,7 @@ export const alarmService = {
    * - tb_alarm_setting upsert (user_id unique)
    */
   async saveMyAlarmSettings(params: {
-    match_alarm_yn: 'Y' | 'N',
+    matching_alarm_yn: 'Y' | 'N',
     chat_alarm_yn: 'Y' | 'N',
     notice_alarm_yn: 'Y' | 'N',
   }) {
@@ -121,7 +121,7 @@ export const alarmService = {
 
     const payload = {
       user_id: user.id,
-      match_alarm_yn: params.match_alarm_yn,
+      matching_alarm_yn: params.matching_alarm_yn,
       chat_alarm_yn: params.chat_alarm_yn,
       notice_alarm_yn: params.notice_alarm_yn,
       update_dt: new Date().toISOString(),
@@ -140,7 +140,7 @@ export const alarmService = {
       data: {
         success: true,
         user_id: data.user_id,
-        match_alarm_yn: data.match_alarm_yn,
+        matching_alarm_yn: data.matching_alarm_yn,
         chat_alarm_yn: data.chat_alarm_yn,
         notice_alarm_yn: data.notice_alarm_yn,
       },

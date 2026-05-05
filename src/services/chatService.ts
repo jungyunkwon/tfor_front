@@ -173,6 +173,41 @@ export const chatService = {
   },
 
   /**
+   * 연락처 공개 상태 조회 (getContactExchangeStatus)
+   */
+  async getContactExchangeStatus(matchId: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
+
+    const { data: exchange, error: exError } = await supabase
+      .from('tb_contact_exchange')
+      .select('*')
+      .eq('match_id', matchId)
+      .maybeSingle();
+
+    if (exError || !exchange) return { data: null, error: exError };
+
+    const mutualAgreedYn = (exchange.user_1_agree_yn === 'Y' && exchange.user_2_agree_yn === 'Y') ? 'Y' : 'N';
+    
+    let targetContactInfo = null;
+    if (mutualAgreedYn === 'Y') {
+        const { data: match } = await supabase.from('tb_match').select('user_1_id, user_2_id').eq('match_id', matchId).single();
+        const targetUserId = match?.user_1_id === user.id ? match?.user_2_id : match?.user_1_id;
+        const { data: profile } = await supabase.from('tb_user_profile').select('nickname').eq('user_id', targetUserId).single();
+        targetContactInfo = `카카오톡 ID 또는 전화번호: ${profile?.nickname}`; 
+    }
+
+    return {
+      data: {
+        mutualAgreedYn: mutualAgreedYn,
+        contactVisibleYn: mutualAgreedYn === 'Y',
+        targetContactInfo: targetContactInfo
+      },
+      error: null
+    };
+  },
+
+  /**
    * 채팅 종료 (endChatMatch)
    */
   async endChatMatch(matchId: string, endedReasonCd: string) {

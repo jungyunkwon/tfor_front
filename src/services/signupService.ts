@@ -89,22 +89,40 @@ export const signupService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
 
-        const { data, error } = await supabase
+        const { data: existingUser, error: existingError } = await supabase
             .from('tb_user')
-            .upsert({
-                user_id: user.id,
-                user_status_cd: 'ACTIVE',
-                join_type_cd: 'KAKAO', // 기본값, 실제론 가입 경로에 따라 달라질 수 있음
-                profile_completed_yn: 'N',
-                survey_completed_yn: 'N',
-                photo_completed_yn: 'N',
-                preview_completed_yn: 'N',
-                matching_locked_yn: 'N',
-                del_yn: 'N',
-                update_user: user.id
-            }, { onConflict: 'user_id' })
-            .select()
-            .single();
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+        if (existingError) return { data: null, error: existingError };
+
+        const provider = user.app_metadata?.provider?.toUpperCase?.() || 'EMAIL';
+
+        let data = existingUser;
+        let error = null;
+
+        if (!existingUser) {
+            const insertResult = await supabase
+                .from('tb_user')
+                .insert({
+                    user_id: user.id,
+                    user_status_cd: 'ACTIVE',
+                    join_type_cd: provider,
+                    profile_completed_yn: 'N',
+                    survey_completed_yn: 'N',
+                    photo_completed_yn: 'N',
+                    preview_completed_yn: 'N',
+                    matching_locked_yn: 'N',
+                    del_yn: 'N',
+                    update_user: user.id
+                })
+                .select()
+                .single();
+
+            data = insertResult.data;
+            error = insertResult.error;
+        }
 
         if (error) return { data, error };
 

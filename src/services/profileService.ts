@@ -13,7 +13,20 @@ export const profileService = {
 
         const { data, error } = await supabase
             .from('tb_user_profile')
-            .select('*')
+            .select(`
+                *,
+                region_detail_cd,
+                body_type_cd,
+                political_orientation_cd,
+                drink_type_cd,
+                diet_style_cd,
+                employment_type_cd,
+                job_detail_text,
+                asset_info_text,
+                contact_phone,
+                contact_kakao_id,
+                contact_open_yn
+            `)
             .eq('user_id', user.id)
             .maybeSingle();
 

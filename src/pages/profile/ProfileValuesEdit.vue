@@ -94,7 +94,7 @@
           class="full-width cta-button"
           unelevated
           :loading="saving"
-          :disable="!isFormValid || saving"
+          :disable="saving"
           @click="onSave"
         />
       </div>
@@ -111,7 +111,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import RadioCard from 'src/components/common/RadioCard.vue';
 import SelectChip from 'src/components/common/SelectChip.vue';
@@ -202,30 +202,39 @@ const getTextCount = (qId) => {
   return (answerMap[qId]?.answerText || '').trim().length;
 };
 
-const isFormValid = computed(() => {
-  // 필수 질문 체크
+const onSave = async () => {
+  if (saving.value) return;
+
+  // Validation
   for (const qId in answerMap) {
     const ans = answerMap[qId];
     const q = rawQuestions.value.find(item => item.surveyQuestionId === qId);
     if (!q) continue;
 
     if (q.requiredYn === 'Y') {
+      let invalid = false;
+      let msg = `[${q.questionText}] 항목을 확인해 주세요.`;
+
       if (q.questionTypeCd === 'CHOICE' || q.questionTypeCd === 'SELECT') {
-        if (!ans.surveyOptionId) return false;
+        if (!ans.surveyOptionId) invalid = true;
       } else if (q.questionTypeCd === 'TEXTAREA' || q.questionTypeCd === 'TEXT') {
-        if (ans.answerText.trim().length < 30) return false; // 기존 스텝 규칙: 30자 이상
+        if (ans.answerText.trim().length < 30) {
+          invalid = true;
+          msg = `[${q.questionText}] 항목은 30자 이상 작성해 주세요.`;
+        }
       } else if (q.questionTypeCd === 'NUMBER') {
-        if (ans.answerNumber === null) return false;
+        if (ans.answerNumber === null) invalid = true;
       } else if (q.questionTypeCd === 'JSON') {
-        if (!ans.answerJson?.value || ans.answerJson.value.length === 0) return false;
+        if (!ans.answerJson?.value || ans.answerJson.value.length === 0) invalid = true;
+      }
+
+      if (invalid) {
+        showErrorToast(msg);
+        return;
       }
     }
   }
-  return true;
-});
 
-const onSave = async () => {
-  if (saving.value) return;
   saving.value = true;
   
   try {

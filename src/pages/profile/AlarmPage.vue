@@ -115,7 +115,7 @@ const fetchSettings = async () => {
     const { data, error } = await alarmService.getMyAlarmSettings();
     if (error) throw error;
 
-    matchAlarm.value = data?.match_alarm_yn !== 'N';
+    matchAlarm.value = data?.matching_alarm_yn !== 'N';
     chatAlarm.value = data?.chat_alarm_yn !== 'N';
     noticeAlarm.value = data?.notice_alarm_yn !== 'N';
   } catch (e) {
@@ -133,7 +133,7 @@ const onSave = async () => {
   saving.value = true;
   try {
     const { error } = await alarmService.saveMyAlarmSettings({
-      match_alarm_yn: matchAlarm.value ? 'Y' : 'N',
+      matching_alarm_yn: matchAlarm.value ? 'Y' : 'N',
       chat_alarm_yn: chatAlarm.value ? 'Y' : 'N',
       notice_alarm_yn: noticeAlarm.value ? 'Y' : 'N',
     });

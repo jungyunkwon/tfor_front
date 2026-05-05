@@ -84,6 +84,7 @@ import SocialLoginButton from 'src/components/login/SocialLoginButton.vue';
 import { supabase } from 'src/utils/supabase';
 import { showErrorToast, showSuccessToast } from 'src/utils/notify';
 import { useAuthStore } from 'src/stores/AuthStore';
+import { signupService } from 'src/services/signupService';
 
 const router = useRouter();
 const route = useRoute();
@@ -109,6 +110,12 @@ const moveAfterLogin = async (user = null, session = null) => {
   }
 
   if (authStore.isLoggedIn) {
+    const { error } = await signupService.initializeUser();
+    if (error) {
+      throw new Error(error.message || 'User initialization failed.');
+    }
+    await authStore.checkOnboardingStatus();
+
     // 온보딩 여부에 따라 페이지 이동
     if (authStore.isOnboardingCompleted) {
       router.replace('/matching');
@@ -116,7 +123,7 @@ const moveAfterLogin = async (user = null, session = null) => {
       router.replace('/signup');
     }
   } else {
-    router.replace('/login');
+    router.replace('/auth/login');
   }
 };
 
@@ -181,7 +188,7 @@ const onSignup = async () => {
 
     if (!hasSession) {
       showSuccessToast('회원가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.');
-      router.push('/login');
+      router.push('/auth/login');
       return;
     }
 

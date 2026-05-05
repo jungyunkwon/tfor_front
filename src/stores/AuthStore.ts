@@ -15,23 +15,27 @@ export const useAuthStore = defineStore('auth', {
             surveyCompletedYn: string;
             photoCompletedYn: string;
             previewCompletedYn: string;
+            nextStep: 'PROFILE' | 'SURVEY' | 'PHOTO' | 'PREVIEW' | 'DONE';
         } | null,
         matchingCount: 0,
     }),
     getters: {
-        isLoggedIn: (state) => !!state.session || !!localStorage.getItem('supabase_access_token'),
-        isOnboardingCompleted: (state) => state.onboardingStatus?.profileCompletedYn === 'Y',
+        isLoggedIn: (state) => !!state.session && !!state.user && !!state.access_token,
+        isOnboardingCompleted: (state) => state.onboardingStatus?.nextStep === 'DONE',
     },
     actions: {
         async initAuth() {
             if (this.isInitialized) return;
 
-            const { data: { session }, error } = await supabase.auth.getSession();
+            // getSession은 로컬 스토리지 데이터만 보지만, 
+            // getUser는 서버에 직접 세션의 유효성을 확인합니다. (DB Reset 등 대응 가능)
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            const { data: { session } } = await supabase.auth.getSession();
 
-            if (!error && session) {
+            if (!userError && user && session) {
                 this.session = session;
-                this.user = session.user;
-                this.userId = session.user.id || null;
+                this.user = user;
+                this.userId = user.id || null;
                 this.access_token = session.access_token || null;
                 this.refresh_token = session.refresh_token || null;
                 
@@ -56,8 +60,11 @@ export const useAuthStore = defineStore('auth', {
         async setUser(user: any, session: any) {
             this.user = user;
             this.session = session;
-            if (session?.access_token) {
-                localStorage.setItem('supabase_access_token', session.access_token);
+            this.userId = user.id || null;
+            this.access_token = session?.access_token || null;
+            this.refresh_token = session?.refresh_token || null;
+            if (this.access_token) {
+                localStorage.setItem('supabase_access_token', this.access_token);
             }
             await this.checkOnboardingStatus();
             await this.fetchMatchingCount();
@@ -74,7 +81,8 @@ export const useAuthStore = defineStore('auth', {
                 this.matchingCount = data.balance_amount;
             }
         },
-        logout() {
+        async logout() {
+            await supabase.auth.signOut();
             this.resetAuth();
             this.isInitialized = false;
         },
@@ -85,6 +93,7 @@ export const useAuthStore = defineStore('auth', {
             this.access_token = null;
             this.refresh_token = null;
             this.onboardingStatus = null;
+            this.matchingCount = 0;
             localStorage.removeItem('supabase_access_token');
         }
     },

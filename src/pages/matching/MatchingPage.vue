@@ -269,7 +269,7 @@ const initMatchingState = async () => {
 
     if (reviewData?.hasPendingReview) {
       // 미작성 후기 존재 -> 이동
-      await router.replace('/review/edit');
+      await router.replace('/evaluation');
       return;
     }
 
@@ -292,8 +292,12 @@ const initMatchingState = async () => {
       }
       if (chatData) {
         activeTargetUser.value = chatData.targetUser;
-        // 연락처 정보가 바로 있다면 연동(구현 정책에 맞춰)
-        contactVisibleYn.value = false; // 이후 요청이나 데이터로 갱신
+        // 연락처 정보가 이미 상호 동의되었는지 확인
+        const { data: exData } = await chatService.getContactExchangeStatus(matchData.matchId);
+        if (exData) {
+          contactVisibleYn.value = exData.contactVisibleYn;
+          targetContactInfo.value = exData.targetContactInfo;
+        }
       }
       
       pageMode.value = 'matched';
@@ -459,7 +463,7 @@ const onClickEndMatching = async () => {
     }
 
     if (data?.reviewRequiredYn === 'Y') {
-      router.replace('/review/edit');
+      router.replace('/evaluation');
     } else {
       // 리뷰 불필요 시 초기화면 복귀
       await initMatchingState();
