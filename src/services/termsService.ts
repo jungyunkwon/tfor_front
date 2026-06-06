@@ -10,7 +10,7 @@ export const termsService = {
     async getCurrentTermsList() {
         const { data, error } = await supabase
             .from('tb_terms')
-            .select('terms_id, terms_type_cd, terms_title, terms_version, required_yn')
+            .select('terms_id, terms_type_cd, terms_title, terms_version, terms_content, required_yn')
             .eq('current_yn', 'Y')
             .eq('del_yn', 'N')
             .order('create_dt', { ascending: false });
@@ -24,6 +24,7 @@ export const termsService = {
                     termsTypeCd: t.terms_type_cd,
                     title: t.terms_title,
                     version: t.terms_version,
+                    content: t.terms_content,
                     requiredYn: t.required_yn
                 }))
             },

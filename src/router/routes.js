@@ -24,6 +24,7 @@ const routes = [
     meta: { isGuest: true },
     children: [
       { path: 'login', component: () => import('pages/LoginPage.vue') },
+      { path: 'signup', component: () => import('pages/EmailSignupPage.vue') },
     ]
   },
   {

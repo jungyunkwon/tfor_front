@@ -52,9 +52,7 @@
           label="이메일로 회원가입하기"
           unelevated
           no-caps
-          :loading="signupLoading"
-          :disable="!canSubmit || signupLoading"
-          @click="onSignup"
+          @click="goToSignup"
         />
       </div>
 
@@ -82,7 +80,7 @@ import { useRouter, useRoute } from 'vue-router';
 
 import SocialLoginButton from 'src/components/login/SocialLoginButton.vue';
 import { supabase } from 'src/utils/supabase';
-import { showErrorToast, showSuccessToast } from 'src/utils/notify';
+import { showErrorToast } from 'src/utils/notify';
 import { useAuthStore } from 'src/stores/AuthStore';
 import { signupService } from 'src/services/signupService';
 
@@ -94,7 +92,6 @@ const localEmail = ref('');
 const localPassword = ref('');
 
 const emailLoginLoading = ref(false);
-const signupLoading = ref(false);
 const kakaoLoginLoading = ref(false);
 const errorMessage = ref('');
 
@@ -163,43 +160,8 @@ const onLocalLogin = async () => {
   }
 };
 
-const onSignup = async () => {
-  if (!canSubmit.value) return;
-
-  errorMessage.value = '';
-  signupLoading.value = true;
-
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email: localEmail.value.trim(),
-      password: localPassword.value,
-    });
-
-    if (error) {
-      throw new Error(error.message || '회원가입 중 오류가 발생했습니다.');
-    }
-
-    const hasSession = !!data?.session;
-    const hasUser = !!data?.user;
-
-    if (!hasUser) {
-      throw new Error('회원가입 처리에 실패했습니다.');
-    }
-
-    if (!hasSession) {
-      showSuccessToast('회원가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.');
-      router.push('/auth/login');
-      return;
-    }
-
-    showSuccessToast('회원가입이 완료되었습니다.');
-    await moveAfterLogin(data.user, data.session);
-  } catch (error) {
-    errorMessage.value = error?.message || '회원가입 중 오류가 발생했습니다.';
-    showErrorToast(errorMessage.value);
-  } finally {
-    signupLoading.value = false;
-  }
+const goToSignup = () => {
+  router.push('/auth/signup');
 };
 
 const onKakaoLogin = async () => {

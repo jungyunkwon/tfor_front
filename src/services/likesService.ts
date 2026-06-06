@@ -51,10 +51,7 @@ export const likesService = {
 
     let query = supabase
       .from('tb_like')
-      .select(`
-        *,
-        receiver:tb_user_profile!receiver_user_id (nickname, gender_cd, region_cd)
-      `, { count: 'exact' })
+      .select('*', { count: 'exact' })
       .eq('sender_user_id', user.id)
       .order('sent_dt', { ascending: false })
       .range(from, to);
@@ -63,13 +60,34 @@ export const likesService = {
       query = query.eq('like_status_cd', params.statusCd);
     }
 
+    if (params.statusCd === 'SENT') {
+      query = query.gt('expire_dt', new Date().toISOString());
+    }
+
     const { data, error, count } = await query;
 
     if (error) return { data: null, error };
 
+    const receiverUserIds = [...new Set((data || []).map((like) => like.receiver_user_id).filter(Boolean))];
+    const { data: receiverProfiles, error: receiverProfileError } = receiverUserIds.length > 0
+      ? await supabase
+          .from('tb_user_profile')
+          .select('user_id, nickname, gender_cd, region_cd')
+          .in('user_id', receiverUserIds)
+      : { data: [], error: null };
+
+    if (receiverProfileError) return { data: null, error: receiverProfileError };
+
+    const receiverProfileMap = new Map(
+      (receiverProfiles || []).map((profile) => [profile.user_id, profile])
+    );
+
     return { 
       data: {
-        items: data,
+        items: (data || []).map((like) => ({
+          ...like,
+          receiver: receiverProfileMap.get(like.receiver_user_id) || null
+        })),
         totalCount: count || 0
       }, 
       error: null 
@@ -85,14 +103,10 @@ export const likesService = {
 
     const { data, error } = await supabase
       .from('tb_like')
-      .select(`
-        like_id,
-        sender_user_id,
-        like_status_cd,
-        sender:tb_user_profile!sender_user_id (nickname, gender_cd, birth_year, region_cd, intro_text)
-      `)
+      .select('like_id, sender_user_id, like_status_cd')
       .eq('receiver_user_id', user.id)
       .eq('like_status_cd', 'SENT')
+      .gt('expire_dt', new Date().toISOString())
       .order('sent_dt', { ascending: true })
       .limit(1)
       .maybeSingle();
@@ -100,11 +114,19 @@ export const likesService = {
     if (error) return { data: null, error };
     if (!data) return { data: null, error: null };
 
+    const { data: senderProfile, error: senderProfileError } = await supabase
+      .from('tb_user_profile')
+      .select('nickname, gender_cd, birth_year, region_cd, intro_text')
+      .eq('user_id', data.sender_user_id)
+      .maybeSingle();
+
+    if (senderProfileError) return { data: null, error: senderProfileError };
+
     return { 
       data: {
         likeId: data.like_id,
         senderUserId: data.sender_user_id,
-        senderProfile: data.sender,
+        senderProfile,
         likeStatusCd: data.like_status_cd,
         canRespond: true
       }, 
@@ -125,10 +147,13 @@ export const likesService = {
       .from('tb_like')
       .update({ like_status_cd: 'ACCEPTED', responded_dt: new Date().toISOString(), update_user: user.id })
       .eq('like_id', likeId)
+      .eq('receiver_user_id', user.id)
+      .eq('like_status_cd', 'SENT')
       .select()
-      .single();
+      .maybeSingle();
 
     if (likeError) return { data: null, error: likeError };
+    if (!like) return { data: null, error: { message: 'No like can be accepted.' } };
 
     // 2. 매칭 확정 (tb_match 생성)
     const { data: match, error: matchError } = await supabase
@@ -147,25 +172,10 @@ export const likesService = {
 
     if (matchError) return { data: null, error: matchError };
 
-    // 3. 채팅방 생성
-    const { data: room, error: roomError } = await supabase
-      .from('tb_chat_room')
-      .insert({
-        match_id: match.match_id,
-        room_status_cd: 'OPEN',
-        opened_dt: new Date().toISOString(),
-        update_user: user.id
-      })
-      .select()
-      .single();
-
-    if (roomError) return { data: null, error: roomError };
-
     return { 
       data: {
         success: true,
         matchId: match.match_id,
-        chatRoomId: room.chat_room_id,
         deductedDiamond: 10
       }, 
       error: null 
@@ -187,7 +197,8 @@ export const likesService = {
         update_user: user.id 
       })
       .eq('like_id', likeId)
-      .eq('receiver_user_id', user.id);
+      .eq('receiver_user_id', user.id)
+      .eq('like_status_cd', 'SENT');
 
     return { 
       data: {

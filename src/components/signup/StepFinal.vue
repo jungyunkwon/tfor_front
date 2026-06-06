@@ -30,31 +30,6 @@
         </p>
       </section>
 
-      <!-- 약관 동의 -->
-      <section class="q-pt-md">
-        <label class="section-label q-mb-md">약관 동의</label>
-        <div class="column q-gutter-y-sm">
-          <q-card flat bordered class="q-pa-sm agreement-item">
-            <q-checkbox 
-              :model-value="form.agreements.privacy"
-              @update:model-value="updateAgreement('privacy', $event)"
-              label="개인정보 수집 및 이용 동의 (필수)"
-              color="primary"
-            />
-            <q-btn flat dense icon="chevron_right" @click.prevent />
-          </q-card>
-
-          <q-card flat bordered class="q-pa-sm agreement-item">
-            <q-checkbox 
-              :model-value="form.agreements.service"
-              @update:model-value="updateAgreement('service', $event)"
-              label="서비스 이용약관 동의 (필수)"
-              color="primary"
-            />
-            <q-btn flat dense icon="chevron_right" @click.prevent />
-          </q-card>
-        </div>
-      </section>
     </div>
 
     <input 
@@ -76,10 +51,6 @@ const props = defineProps({
     required: true,
     default: () => ({
       photos: [],
-      agreements: {
-        privacy: false,
-        service: false
-      }
     })
   }
 });
@@ -94,16 +65,6 @@ const updateField = (key, value) => {
   emit('update:modelValue', {
     ...form.value,
     [key]: value
-  });
-};
-
-const updateAgreement = (key, val) => {
-  emit('update:modelValue', {
-    ...form.value,
-    agreements: {
-      ...form.value.agreements,
-      [key]: val
-    }
   });
 };
 
@@ -128,8 +89,7 @@ const onFileChange = (e) => {
 const isValid = computed(() => {
   const f = form.value;
   const hasOnePhoto = Array.isArray(f.photos) && f.photos.some(p => !!p);
-  const agreementsOk = f.agreements?.privacy && f.agreements?.service;
-  return hasOnePhoto && agreementsOk;
+  return hasOnePhoto;
 });
 
 watch(isValid, (newVal) => {
@@ -151,10 +111,4 @@ watch(isValid, (newVal) => {
   border: 1.5px dashed #cbd5e1
   background-color: #f8fafc
 
-.agreement-item
-  border-radius: 12px
-  display: flex
-  align-items: center
-  justify-content: space-between
-  padding: 8px 12px
 </style>

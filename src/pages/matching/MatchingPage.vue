@@ -91,12 +91,21 @@
       <div v-if="pageMode === 'waiting'" class="q-px-md q-py-lg">
         <div class="bg-primary-1 q-pa-lg rounded-borders text-center border-primary">
           <div class="text-h6 text-weight-bold text-grey-9 q-mb-sm">
-            {{ recommendationProfile?.nickname }}님이 프로필을 읽어보고 있어요.
+            Waiting for {{ recommendationProfile?.nickname }}'s response.
           </div>
           <div class="text-body2 text-grey-7 q-mb-md">답장할 시간은 48시간임</div>
           <div class="text-primary text-h4 text-weight-bold">
             {{ formattedRemainingTime }}
           </div>
+        </div>
+      </div>
+
+      <div v-if="pageMode === 'received'" class="q-px-md q-py-lg">
+        <div class="bg-primary-1 q-pa-lg rounded-borders text-center border-primary">
+          <div class="text-h6 text-weight-bold text-grey-9 q-mb-sm">
+            {{ recommendationProfile?.nickname }} sent you a like.
+          </div>
+          <div class="text-body2 text-grey-7">Accept to start a match.</div>
         </div>
       </div>
 
@@ -124,7 +133,7 @@
       </div>
 
       <!-- 하단 액션 버튼 영역 -->
-      <div v-if="pageMode === 'recommendation' || pageMode === 'matched'" class="action-footer fixed-bottom bg-white q-pa-md flex q-gutter-x-md">
+      <div v-if="pageMode === 'recommendation' || pageMode === 'matched' || pageMode === 'received'" class="action-footer fixed-bottom bg-white q-pa-md flex q-gutter-x-md">
         <!-- Matched (case3) 버튼 -->
         <template v-if="pageMode === 'matched'">
           <q-btn
@@ -159,6 +168,26 @@
             @click="onClickSendLike"
           />
         </template>
+
+        <template v-if="pageMode === 'received'">
+          <q-btn
+            unelevated
+            color="grey-2"
+            text-color="grey-7"
+            class="col q-py-md text-weight-bold"
+            label="Reject"
+            :loading="respondSubmitting"
+            @click="onClickRejectReceivedLike"
+          />
+          <q-btn
+            unelevated
+            color="primary"
+            class="col-8 q-py-md text-weight-bold"
+            label="Accept"
+            :loading="respondSubmitting"
+            @click="onClickAcceptReceivedLike"
+          />
+        </template>
       </div>
     </div>
   </q-page>
@@ -187,10 +216,10 @@ const pendingLikeId = ref('');
 const pendingLikeStatusCd = ref('');
 const expireDt = ref('');
 const remainingSeconds = ref(0);
+const receivedLikeId = ref('');
 
 // Case 2 성사 완료 (Matched) 관련
 const activeMatchId = ref('');
-const activeChatRoomId = ref('');
 const activeTargetUser = ref(null);
 const contactVisibleYn = ref(false);
 const targetContactInfo = ref(null);
@@ -200,6 +229,7 @@ const loading = ref(true);
 const likeSubmitting = ref(false);
 const skipSubmitting = ref(false);
 const endSubmitting = ref(false);
+const respondSubmitting = ref(false);
 const errorMessage = ref('');
 
 const $q = useQuasar();
@@ -283,9 +313,8 @@ const initMatchingState = async () => {
     if (matchData?.hasActiveMatch) {
       // 활성 매칭 존재 처리
       activeMatchId.value = matchData.matchId;
-      activeChatRoomId.value = matchData.chatRoomId;
       
-      const { data: chatData, error: chatError } = await chatService.getMyActiveChatRoom();
+      const { data: chatData, error: chatError } = await chatService.getMyActiveMatchInfo();
       if (chatError) {
         setPageToError('활성 매칭 정보를 불러오지 못했어요.');
         return;
@@ -301,6 +330,27 @@ const initMatchingState = async () => {
       }
       
       pageMode.value = 'matched';
+      return;
+    }
+
+    const { data: receivedLikeData, error: receivedLikeError } = await likesService.getReceivedLikeTop();
+    if (receivedLikeError) {
+      setPageToError('Failed to load received like.');
+      return;
+    }
+
+    if (receivedLikeData?.canRespond) {
+      const senderProfile = receivedLikeData.senderProfile;
+      receivedLikeId.value = receivedLikeData.likeId;
+      recommendationUserId.value = receivedLikeData.senderUserId;
+      recommendationProfile.value = {
+        nickname: senderProfile?.nickname,
+        age: senderProfile?.birth_year ? new Date().getFullYear() - senderProfile.birth_year : null,
+        regionCd: senderProfile?.region_cd,
+        introText: senderProfile?.intro_text
+      };
+      recommendationReason.value = '';
+      pageMode.value = 'received';
       return;
     }
 
@@ -387,6 +437,37 @@ const onClickSendLike = async () => {
     pageMode.value = 'waiting';
     startTimer();
   }
+};
+
+const onClickAcceptReceivedLike = async () => {
+  if (!receivedLikeId.value || respondSubmitting.value) return;
+
+  respondSubmitting.value = true;
+  const { error } = await likesService.acceptLike(receivedLikeId.value);
+  respondSubmitting.value = false;
+
+  if (error) {
+    $q.notify({ type: 'negative', message: 'Failed to accept like.' });
+    return;
+  }
+
+  $q.notify({ type: 'positive', message: 'Match accepted.' });
+  await initMatchingState();
+};
+
+const onClickRejectReceivedLike = async () => {
+  if (!receivedLikeId.value || respondSubmitting.value) return;
+
+  respondSubmitting.value = true;
+  const { error } = await likesService.rejectLike(receivedLikeId.value, 'REJECTED_BY_USER');
+  respondSubmitting.value = false;
+
+  if (error) {
+    $q.notify({ type: 'negative', message: 'Failed to reject like.' });
+    return;
+  }
+
+  await initMatchingState();
 };
 
 /**

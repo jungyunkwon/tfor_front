@@ -60,7 +60,6 @@ import { useProfileStore } from 'src/stores/ProfileStore';
 import { useAuthStore } from 'src/stores/AuthStore';
 import { signupService } from 'src/services/signupService';
 import { surveyService } from 'src/services/surveyService';
-import { termsService } from 'src/services/termsService';
 import { photoService } from 'src/services/photoService';
 
 import StepProgressBar from 'src/components/common/StepProgressBar.vue';
@@ -175,11 +174,7 @@ const signupData = reactive({
     dealBreakers: ''
   },
   final: {
-    photos: [],
-    agreements: {
-      privacy: false,
-      service: false
-    }
+    photos: []
   }
 });
 
@@ -242,7 +237,6 @@ const prevStep = () => {
 };
 
 const questionsMap = ref({});
-const termsListMap = ref({});
 
 const applyStepFromOnboardingStatus = () => {
   const nextOnboardingStep = authStore.onboardingStatus?.nextStep;
@@ -330,22 +324,6 @@ const saveSurveyStep = async () => {
 };
 
 const saveFinalStep = async () => {
-  const agreements = Object.keys(signupData.final.agreements)
-    .map(key => ({
-      termsId: termsListMap.value[key],
-      agreedYn: signupData.final.agreements[key] ? 'Y' : 'N'
-    }))
-    .filter(a => !!a.termsId);
-
-  if (agreements.length > 0) {
-    const resTerms = await termsService.agreeTerms({
-      agreements,
-      ipAddress: '127.0.0.1',
-      userAgent: navigator.userAgent
-    });
-    if (resTerms.error) throw new Error(resTerms.error.message || 'Terms agreement failed.');
-  }
-
   if (signupData.final.photos && signupData.final.photos.length > 0) {
     for (let i = 0; i < signupData.final.photos.length; i++) {
       const photo = signupData.final.photos[i];
@@ -400,16 +378,6 @@ onMounted(async () => {
     }
   }
 
-  // 2. 약관 리스트 가져오기
-  // Load current terms list.
-  const resTerms = await termsService.getCurrentTermsList();
-  if (resTerms.data?.termsList) {
-    resTerms.data.termsList.forEach(t => {
-      // terms_type_cd로 매핑 (StepFinal의 agreements 키 'privacy', 'service'와 대조)
-      const key = t.termsTypeCd === 'PRIVACY' ? 'privacy' : t.termsTypeCd === 'SERVICE' ? 'service' : t.termsTypeCd.toLowerCase();
-      termsListMap.value[key] = t.termsId;
-    });
-  }
 });
 
 const onComplete = async () => {

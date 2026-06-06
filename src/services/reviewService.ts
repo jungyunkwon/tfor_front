@@ -11,7 +11,16 @@ export const reviewService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
 
-    const { data: match } = await supabase.from('tb_match').select('user_1_id, user_2_id').eq('match_id', reviewParams.matchId).single();
+    const { data: match, error: matchError } = await supabase
+      .from('tb_match')
+      .select('user_1_id, user_2_id')
+      .eq('match_id', reviewParams.matchId)
+      .single();
+    if (matchError) return { data: null, error: matchError };
+    if (match.user_1_id !== user.id && match.user_2_id !== user.id) {
+      return { data: null, error: { message: 'This match cannot be reviewed by the current user.' } };
+    }
+
     const targetUserId = match?.user_1_id === user.id ? match?.user_2_id : match?.user_1_id;
 
     const payload = {
@@ -37,7 +46,11 @@ export const reviewService = {
 
     // 매칭 테이블의 내 리뷰 완료 여부 업데이트
     const columnToUpdate = match?.user_1_id === user.id ? 'user_1_review_completed_yn' : 'user_2_review_completed_yn';
-    await supabase.from('tb_match').update({ [columnToUpdate]: 'Y' }).eq('match_id', reviewParams.matchId);
+    const { error: updateError } = await supabase
+      .from('tb_match')
+      .update({ [columnToUpdate]: 'Y' })
+      .eq('match_id', reviewParams.matchId);
+    if (updateError) return { data: null, error: updateError };
 
     return {
       data: {
@@ -57,14 +70,16 @@ export const reviewService = {
     if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
 
     // 내가 1번 유저이면서 리뷰를 안 했거나, 2번 유저이면서 리뷰를 안 한 ENDED 매칭 조회
-    const { data: matchData, error: matchError } = await supabase
+    const { data: matchList, error: matchError } = await supabase
       .from('tb_match')
       .select('match_id, user_1_id, user_2_id')
       .eq('match_status_cd', 'ENDED')
       .or(`and(user_1_id.eq.${user.id},user_1_review_completed_yn.eq.N),and(user_2_id.eq.${user.id},user_2_review_completed_yn.eq.N)`)
-      .maybeSingle();
+      .order('ended_dt', { ascending: true })
+      .limit(1);
 
     if (matchError) return { data: null, error: matchError };
+    const matchData = matchList?.[0];
     if (!matchData) return { data: { hasPendingReview: false }, error: null };
 
     const targetUserId = matchData.user_1_id === user.id ? matchData.user_2_id : matchData.user_1_id;

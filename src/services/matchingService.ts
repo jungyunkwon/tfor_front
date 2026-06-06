@@ -21,22 +21,10 @@ export const matchingService = {
 
     if (matchError) return { data: null, error: matchError };
 
-    let chatRoomId = null;
-    if (matchData) {
-      const { data: roomData } = await supabase
-        .from('tb_chat_room')
-        .select('chat_room_id')
-        .eq('match_id', matchData.match_id)
-        .eq('room_status_cd', 'OPEN')
-        .maybeSingle();
-      chatRoomId = roomData?.chat_room_id;
-    }
-
     return {
       data: {
         hasActiveMatch: !!matchData,
         matchId: matchData?.match_id,
-        chatRoomId: chatRoomId,
         partnerId: matchData ? (matchData.user_1_id === user.id ? matchData.user_2_id : matchData.user_1_id) : null,
         canReceiveRecommendation: !matchData // 매칭 중이 아니면 추천 가능
       },
@@ -78,7 +66,7 @@ export const matchingService = {
     const { data, error } = await query.maybeSingle();
 
     if (error) return { data: null, error };
-    if (!data) return { data: null, error: { message: '추천 가능한 대상이 없습니다.' } };
+    if (!data) return { data: null, error: null };
 
     return {
       data: {

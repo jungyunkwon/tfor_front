@@ -1,25 +1,20 @@
 import { supabase } from '../utils/supabase';
 
 /**
- * 실시간 채팅 서비스 (API_GUIDE.md 515-607 기반)
+ * 매칭 후속 처리 서비스 (API_GUIDE.md 515-607 기반)
  */
 export const chatService = {
   /**
-   * 진행 중인 채팅방 조회 (getMyActiveChatRoom)
+   * 진행 중인 매칭 조회 (getMyActiveMatchInfo)
    */
-  async getMyActiveChatRoom() {
+  async getMyActiveMatchInfo() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
 
-    // 활성 채팅방(OPEN) 조회
+    // 활성 매칭(ACTIVE) 조회
     const { data: matchData, error: matchError } = await supabase
       .from('tb_match')
-      .select(`
-        match_id,
-        user_1_id,
-        user_2_id,
-        tb_chat_room!match_id (chat_room_id, room_status_cd)
-      `)
+      .select('match_id, user_1_id, user_2_id')
       .or(`user_1_id.eq.${user.id},user_2_id.eq.${user.id}`)
       .eq('match_status_cd', 'ACTIVE')
       .maybeSingle();
@@ -36,76 +31,12 @@ export const chatService = {
 
     return {
       data: {
-        chatRoomId: matchData.tb_chat_room?.[0]?.chat_room_id,
         matchId: matchData.match_id,
         targetUser: {
           userId: targetUserId,
           nickname: targetUser?.nickname,
           mainPhoto: targetUser?.photo_list?.[0]?.storage_path
-        },
-        roomStatusCd: matchData.tb_chat_room?.[0]?.room_status_cd
-      },
-      error: null
-    };
-  },
-
-  /**
-   * 채팅 메시지 목록 조회 (getChatMessages)
-   */
-  async getChatMessages(params: { chatRoomId: string, cursor?: string }) {
-    let query = supabase
-      .from('tb_chat_message')
-      .select('*')
-      .eq('chat_room_id', params.chatRoomId)
-      .order('sent_dt', { ascending: false })
-      .limit(50);
-
-    if (params.cursor) {
-      query = query.lt('sent_dt', params.cursor);
-    }
-
-    const { data, error } = await query;
-
-    if (error) return { data: null, error };
-
-    return {
-      data: {
-        messages: data,
-        nextCursor: data.length > 0 ? data[data.length - 1].sent_dt : null
-      },
-      error: null
-    };
-  },
-
-  /**
-   * 메시지 전송 (sendChatMessage)
-   */
-  async sendChatMessage(params: { chatRoomId: string, messageText: string, messageTypeCd: string }) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
-
-    const payload = {
-      chat_room_id: params.chatRoomId,
-      sender_user_id: user.id,
-      message_text: params.messageText,
-      message_type_cd: params.messageTypeCd,
-      sent_dt: new Date().toISOString(),
-      update_user: user.id
-    };
-
-    const { data, error } = await supabase
-      .from('tb_chat_message')
-      .insert(payload)
-      .select()
-      .single();
-
-    if (error) return { data: null, error };
-
-    return {
-      data: {
-        messageId: data.chat_message_id,
-        sentDt: data.sent_dt,
-        sendStatus: 'SUCCESS'
+        }
       },
       error: null
     };
@@ -165,7 +96,7 @@ export const chatService = {
     return {
       data: {
         mutualAgreedYn: mutualAgreedYn,
-        contactVisibleYn: mutualAgreedYn,
+        contactVisibleYn: mutualAgreedYn === 'Y',
         targetContactInfo: targetContactInfo
       },
       error: null
@@ -214,7 +145,7 @@ export const chatService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('tb_match')
       .update({ 
         match_status_cd: 'ENDED', 
@@ -222,9 +153,14 @@ export const chatService = {
         ended_reason_cd: endedReasonCd,
         update_user: user.id 
       })
-      .eq('match_id', matchId);
+      .eq('match_id', matchId)
+      .eq('match_status_cd', 'ACTIVE')
+      .or(`user_1_id.eq.${user.id},user_2_id.eq.${user.id}`)
+      .select('match_id')
+      .maybeSingle();
 
     if (error) return { data: null, error };
+    if (!data) return { data: null, error: { message: 'No active match can be ended.' } };
 
     return {
       data: {
