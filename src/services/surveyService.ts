@@ -44,6 +44,7 @@ export const surveyService = {
           questionCode: q.question_code,
           questionText: q.question_text,
           questionTypeCd: q.question_type_cd,
+          requiredYn: q.required_yn,
           options: q.tb_survey_option?.map((o: any) => ({
             surveyOptionId: o.survey_option_id,
             optionText: o.option_text,
@@ -98,7 +99,7 @@ export const surveyService = {
 
     const { data, error } = await supabase
       .from('tb_user_survey_answer')
-      .select('survey_question_id, survey_option_id, answer_text, answer_json, submitted_dt')
+      .select('survey_question_id, survey_option_id, answer_text, answer_number, answer_json, submitted_dt')
       .eq('user_id', user.id);
 
     if (error) return { data: null, error };

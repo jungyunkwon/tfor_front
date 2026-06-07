@@ -7,42 +7,41 @@
 
     <div class="column q-gutter-y-xl">
       <section>
-        <label class="section-label q-mb-md">상대방에게 바라는 조건 (다중 선택)</label>
-        <SelectChip
+        <SurveyChoice
           :model-value="form.targetConditions"
+          code="targetConditions"
+          :questions-map="questionsMap"
           :options="conditionOptions"
           multiple
           @update:model-value="updateField('targetConditions', $event)"
         />
-        <q-input
+        <SurveyTextInput
           :model-value="form.targetConditionExtra"
-          @update:model-value="updateField('targetConditionExtra', $event)"
-          outlined
-          dense
+          code="targetConditionExtra"
+          :questions-map="questionsMap"
           placeholder="기타 추가하고 싶은 조건이 있다면?"
           class="q-mt-sm"
+          @update:model-value="updateField('targetConditionExtra', $event)"
         />
       </section>
 
-      <section>
-        <label class="section-label q-mb-xs">전 연애에서 배운 점 / 개선하고 싶은 점</label>
-        <q-input
-          :model-value="form.lastRelationshipAnalysis"
-          @update:model-value="updateField('lastRelationshipAnalysis', $event)"
-          type="textarea"
-          outlined
-          placeholder="저번 연애에서 내가 부족했던 부분이나 깨달은 가치관을 솔직하게 적어주세요."
-          rows="5"
-        />
-        <p class="text-caption text-grey-6 q-mt-xs">과거를 돌아봄으로써 더 성숙한 다음 연애를 준비할 수 있습니다.</p>
-      </section>
+      <SurveyTextArea
+        :model-value="form.lastRelationshipAnalysis"
+        code="lastRelationshipAnalysis"
+        :questions-map="questionsMap"
+        placeholder="저번 연애에서 내가 부족했던 부분이나 깨달은 가치관을 솔직하게 적어주세요."
+        hint="과거를 돌아봄으로써 더 성숙한 다음 연애를 준비할 수 있습니다."
+        @update:model-value="updateField('lastRelationshipAnalysis', $event)"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed, watch } from 'vue';
-import SelectChip from 'src/components/common/SelectChip.vue';
+import SurveyChoice from 'src/components/survey/SurveyChoice.vue';
+import SurveyTextArea from 'src/components/survey/SurveyTextArea.vue';
+import SurveyTextInput from 'src/components/survey/SurveyTextInput.vue';
 
 const props = defineProps({
   modelValue: {
@@ -54,7 +53,8 @@ const props = defineProps({
       importance: 3,
       lastRelationshipAnalysis: ''
     })
-  }
+  },
+  questionsMap: { type: Object, default: () => ({}) }
 });
 
 const emit = defineEmits(['update:modelValue', 'validation']);

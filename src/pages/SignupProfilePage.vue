@@ -41,6 +41,7 @@
               :is="currentStepComponent"
               v-model="signupData[stepKey]"
               :summary="signupData"
+              :questions-map="questionsMap"
               @validation="onStepValidation"
             />
           </keep-alive>
@@ -304,12 +305,23 @@ const buildSurveyAnswers = () => {
       const qInfo = questionsMap.value[code];
       if (qInfo) {
         const val = signupData[cat][code];
+        const isEmpty = val === null ||
+          val === undefined ||
+          val === '' ||
+          (Array.isArray(val) && val.length === 0);
+
+        if (isEmpty) return;
+
+        const isTextAnswer = qInfo.questionTypeCd === 'TEXT' || qInfo.questionTypeCd === 'TEXTAREA';
+        const isNumberAnswer = qInfo.questionTypeCd === 'NUMBER';
+        const surveyOptionId = !Array.isArray(val) ? qInfo.optionMap?.[val] || null : null;
+
         surveyAnswers.push({
-          surveyQuestionId: qInfo.id,
-          surveyOptionId: qInfo.options[val] || null,
-          answerText: qInfo.type === 'TEXT' || qInfo.type === 'TEXTAREA' ? val : null,
-          answerNumber: qInfo.type === 'NUMBER' ? Number(val) : null,
-          answerJson: qInfo.type === 'JSON' || Array.isArray(val) ? { value: val } : null
+          surveyQuestionId: qInfo.surveyQuestionId,
+          surveyOptionId,
+          answerText: isTextAnswer ? val : null,
+          answerNumber: isNumberAnswer ? Number(val) : null,
+          answerJson: qInfo.questionTypeCd === 'JSON' || Array.isArray(val) ? { value: val } : null
         });
       }
     });
@@ -399,9 +411,13 @@ onMounted(async () => {
           q.options.forEach(o => { optMap[o.optionValue] = o.surveyOptionId; });
         }
         questionsMap.value[q.questionCode] = {
-          id: q.surveyQuestionId,
-          type: q.questionTypeCd,
-          options: optMap
+          surveyQuestionId: q.surveyQuestionId,
+          questionCode: q.questionCode,
+          questionText: q.questionText,
+          questionTypeCd: q.questionTypeCd,
+          requiredYn: q.requiredYn,
+          options: q.options || [],
+          optionMap: optMap
         };
       });
     }

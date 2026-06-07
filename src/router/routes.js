@@ -5,6 +5,7 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', redirect: '/matching' },
+      { path: 'likes', component: () => import('pages/likes/LikesPage.vue') },
       { path: 'matching', component: () => import('pages/matching/MatchingPage.vue') },
       { path: 'evaluation', component: () => import('pages/matching/ReviewEdit.vue') },
       { path: 'profile', component: () => import('pages/profile/ProfilePage.vue') },
