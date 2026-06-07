@@ -25,9 +25,22 @@ export const chatService = {
     const targetUserId = matchData.user_1_id === user.id ? matchData.user_2_id : matchData.user_1_id;
     const { data: targetUser } = await supabase
       .from('tb_user_profile')
-      .select('nickname, photo_list:tb_profile_photo (storage_path)')
+      .select('nickname')
       .eq('user_id', targetUserId)
       .single();
+
+    const { data: mainPhoto, error: photoError } = await supabase
+      .from('tb_profile_photo')
+      .select('storage_path')
+      .eq('user_id', targetUserId)
+      .eq('visible_yn', 'Y')
+      .eq('del_yn', 'N')
+      .order('main_photo_yn', { ascending: false })
+      .order('sort_no', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (photoError) return { data: null, error: photoError };
 
     return {
       data: {
@@ -35,7 +48,7 @@ export const chatService = {
         targetUser: {
           userId: targetUserId,
           nickname: targetUser?.nickname,
-          mainPhoto: targetUser?.photo_list?.[0]?.storage_path
+          mainPhoto: mainPhoto?.storage_path
         }
       },
       error: null

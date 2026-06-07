@@ -46,14 +46,7 @@ export const matchingService = {
 
     let query = supabase
       .from('tb_user_profile')
-      .select(`
-        user_id,
-        nickname,
-        birth_year,
-        region_cd,
-        intro_text,
-        tb_profile_photo (storage_path)
-      `)
+      .select('user_id, nickname, birth_year, region_cd, intro_text')
       .eq('gender_cd', targetGender)
       .eq('profile_open_yn', 'Y')
       .neq('user_id', user.id)
@@ -68,6 +61,19 @@ export const matchingService = {
     if (error) return { data: null, error };
     if (!data) return { data: null, error: null };
 
+    const { data: mainPhoto, error: photoError } = await supabase
+      .from('tb_profile_photo')
+      .select('storage_path')
+      .eq('user_id', data.user_id)
+      .eq('visible_yn', 'Y')
+      .eq('del_yn', 'N')
+      .order('main_photo_yn', { ascending: false })
+      .order('sort_no', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (photoError) return { data: null, error: photoError };
+
     return {
       data: {
         recommendationUserId: data.user_id,
@@ -76,7 +82,7 @@ export const matchingService = {
           age: new Date().getFullYear() - (data.birth_year || new Date().getFullYear()),
           regionCd: data.region_cd,
           introText: data.intro_text,
-          mainPhoto: data.tb_profile_photo?.[0]?.storage_path
+          mainPhoto: mainPhoto?.storage_path
         },
         recommendationReason: '관심사가 비슷한 분이에요'
       },

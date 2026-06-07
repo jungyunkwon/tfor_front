@@ -4,6 +4,8 @@ import { supabase } from '../utils/supabase';
  * TB_PROFILE_PHOTO 데이터를 처리하는 서비스 (API_GUIDE.md 285-363 기반)
  */
 export const photoService = {
+  PROFILE_PHOTO_BUCKET: 'profile-photos',
+
   /**
    * 내 프로필 사진 목록 조회 (getMyPhotoList)
    */
@@ -74,6 +76,44 @@ export const photoService = {
       }, 
       error: null 
     };
+  },
+
+  /**
+   * 프로필 사진 파일을 Storage에 업로드한 뒤 메타 데이터를 저장합니다.
+   */
+  async uploadProfilePhotoFile(file: File, photoPayload: any) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { data: null, error: { message: '로그인이 필요합니다.' } };
+
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    if (!extension || !['jpg', 'png'].includes(extension)) {
+      return { data: null, error: { message: 'jpg, png 파일만 등록할 수 있습니다.' } };
+    }
+
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      return { data: null, error: { message: 'jpg, png 파일만 등록할 수 있습니다.' } };
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      return { data: null, error: { message: '사진은 파일당 5MB까지 등록할 수 있습니다.' } };
+    }
+
+    const storagePath = `${user.id}/${Date.now()}-${photoPayload.sortNo || 1}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from(this.PROFILE_PHOTO_BUCKET)
+      .upload(storagePath, file, {
+        contentType: file.type,
+        upsert: false
+      });
+
+    if (uploadError) return { data: null, error: uploadError };
+
+    return this.uploadProfilePhoto({
+      ...photoPayload,
+      storagePath,
+      mimeType: file.type,
+      fileSize: file.size
+    });
   },
 
   /**

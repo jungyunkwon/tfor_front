@@ -6,6 +6,31 @@
     </div>
 
     <div class="q-col-gutter-y-lg">
+      <!-- 사진 등록 -->
+      <section>
+        <label class="section-label q-mb-md">본인을 표현하는 사진을 등록해주세요</label>
+        <div class="row q-col-gutter-sm">
+          <div v-for="i in 3" :key="i" class="col-4">
+            <q-card
+              flat
+              bordered
+              class="photo-slot flex justify-center items-center cursor-pointer hover-scale overflow-hidden"
+              @click="onPhotoClick(i - 1)"
+            >
+              <q-img v-if="form.photos?.[i - 1]?.previewUrl" :src="form.photos[i - 1].previewUrl" ratio="1" />
+              <div v-else class="column items-center text-grey-6">
+                <q-icon name="add_a_photo" size="24px" />
+                <span class="text-caption q-mt-xs">{{ i === 1 ? '대표' : '추가' }}</span>
+              </div>
+            </q-card>
+          </div>
+        </div>
+        <p v-if="photoError" class="text-caption text-negative q-mt-sm">{{ photoError }}</p>
+        <p class="text-caption text-grey-6 q-mt-md">
+          * jpg, png 파일만 등록할 수 있습니다. 사진은 최대 3장, 파일당 5MB까지 가능합니다.
+        </p>
+      </section>
+
       <!-- 닉네임 -->
       <section>
         <label class="section-label">닉네임</label>
@@ -292,11 +317,19 @@
         />
       </section>
     </div>
+
+    <input
+      type="file"
+      ref="fileInput"
+      class="hidden"
+      accept="image/*"
+      @change="onFileChange"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import SelectChip from 'src/components/common/SelectChip.vue';
 import {
   BODY_SHAPE_OPTIONS,
@@ -324,12 +357,66 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'validation']);
 
 const form = computed(() => props.modelValue ?? {});
+const fileInput = ref(null);
+const currentSlotIndex = ref(0);
+const photoError = ref('');
+const MAX_PHOTO_COUNT = 3;
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+const ALLOWED_PHOTO_EXTENSIONS = ['jpg', 'png'];
+const ALLOWED_PHOTO_MIME_TYPES = ['image/jpeg', 'image/png'];
 
 const updateField = (key, value) => {
   emit('update:modelValue', {
     ...form.value,
     [key]: value
   });
+};
+
+const onPhotoClick = (index) => {
+  currentSlotIndex.value = index;
+  fileInput.value.click();
+};
+
+const onFileChange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  photoError.value = '';
+  const extension = file.name.split('.').pop()?.toLowerCase();
+  const currentPhotos = form.value.photos || [];
+  const photoCount = currentPhotos.filter(photo => !!photo).length;
+
+  if (!extension || !ALLOWED_PHOTO_EXTENSIONS.includes(extension) || !ALLOWED_PHOTO_MIME_TYPES.includes(file.type)) {
+    photoError.value = 'jpg, png 파일만 등록할 수 있습니다.';
+    e.target.value = '';
+    return;
+  }
+
+  if (file.size > MAX_PHOTO_SIZE) {
+    photoError.value = '사진은 파일당 5MB까지 등록할 수 있습니다.';
+    e.target.value = '';
+    return;
+  }
+
+  if (!currentPhotos[currentSlotIndex.value] && photoCount >= MAX_PHOTO_COUNT) {
+    photoError.value = '사진은 최대 3장까지 등록할 수 있습니다.';
+    e.target.value = '';
+    return;
+  }
+
+  const newPhotos = [...currentPhotos];
+  if (newPhotos[currentSlotIndex.value]?.previewUrl) {
+    URL.revokeObjectURL(newPhotos[currentSlotIndex.value].previewUrl);
+  }
+  newPhotos[currentSlotIndex.value] = {
+    file,
+    previewUrl: URL.createObjectURL(file),
+    name: file.name,
+    size: file.size,
+    type: file.type
+  };
+  updateField('photos', newPhotos);
+  e.target.value = '';
 };
 
 const genderOptions = [
@@ -365,9 +452,11 @@ const onRegionChange = (val) => {
 
 const isValid = computed(() => {
   const m = form.value;
+  const hasOnePhoto = Array.isArray(m.photos) && m.photos.some(p => !!p?.file);
   
   // 기본 필수 체크
   const baseValid = !!(
+    hasOnePhoto &&
     m.nickname &&
     m.gender_cd &&
     m.birth_year &&
@@ -414,4 +503,11 @@ watch(isValid, (newVal) => {
   margin-bottom: 8px
   color: var(--color-auth-text, #1e293b)
   font-size: 0.95rem
+
+.photo-slot
+  height: 110px
+  width: 100%
+  border-radius: 12px
+  border: 1.5px dashed #cbd5e1
+  background-color: #f8fafc
 </style>
